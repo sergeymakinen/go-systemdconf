@@ -1,0 +1,10 @@
+version: "{build}"
+platform: x64
+build: false
+clone_folder: c:\gopath\src\github.com\sergeymakinen\go-systemdconf
+clone_depth: 1
+environment:
+  GOPATH: c:\gopath
+stack: go 1.13
+test_script:
+  - go test ./...

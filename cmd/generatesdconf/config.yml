@@ -1,0 +1,448 @@
+files:
+  unit/sections.go:
+    structs:
+      UnitSection:
+        comment: UnitSection represents generic information about the unit that is not dependent on the type of unit
+        embedded: systemdconf.Section
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.unit.html#%5BUnit%5D%20Section%20Options
+      InstallSection:
+        comment: InstallSection represents installation information for the unit
+        embedded: systemdconf.Section
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.unit.html#%5BInstall%5D%20Section%20Options
+  unit/options.go:
+    structs:
+      ExecOptions:
+        comment: ExecOptions represents a subset of configuration options which define the execution environment of spawned processes
+        fields:
+          - https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Paths
+          - https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Credentials
+          - https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Capabilities
+          - https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Security
+          - https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Mandatory%20Access%20Control
+          - https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Process%20Properties
+          - https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Scheduling
+          - https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Sandboxing
+          - https://www.freedesktop.org/software/systemd/man/systemd.exec.html#System%20Call%20Filtering
+          - https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Environment
+          - https://www.freedesktop.org/software/systemd/man/systemd.exec.html#Logging%20and%20Standard%20Input/Output
+          - https://www.freedesktop.org/software/systemd/man/systemd.exec.html#System%20V%20Compatibility
+      KillOptions:
+        comment: KillOptions represents a subset of configuration options which define the killing procedure of processes belonging to the unit
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.kill.html#Options
+      ResourceControlOptions:
+        comment: ResourceControlOptions represents a subset of configuration options for resource control of spawned processes
+        fields:
+          - https://www.freedesktop.org/software/systemd/man/systemd.resource-control.html#Options
+          - https://www.freedesktop.org/software/systemd/man/systemd.resource-control.html#Deprecated%20Options
+  unit/service.go:
+    structs:
+      ServiceSection:
+        comment: ServiceSection represents information about the service and the process it supervises
+        embedded:
+          - systemdconf.Section
+          - ExecOptions
+          - KillOptions
+          - ResourceControlOptions
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.service.html#Options
+      ServiceFile:
+        comment: ServiceFile represents information about a process controlled and supervised by systemd
+        embedded: systemdconf.File
+        fields:
+          Unit:
+            type: UnitSection
+            comment: Generic information about the unit that is not dependent on the type of unit
+            short: true
+          Service:
+            type: ServiceSection
+            comment: Information about the service and the process it supervises
+            short: true
+          Install:
+            type: InstallSection
+            comment: Installation information for the unit
+            short: true
+  unit/socket.go:
+    structs:
+      SocketSection:
+        comment: SocketSection represents information about the socket or FIFO it supervises
+        embedded:
+          - systemdconf.Section
+          - ExecOptions
+          - KillOptions
+          - ResourceControlOptions
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.socket.html#Options
+      SocketFile:
+        comment: SocketFile represents information about an IPC or network socket or a file system FIFO controlled and supervised by systemd, for socket-based activation
+        embedded: systemdconf.File
+        fields:
+          Unit:
+            type: UnitSection
+            comment: Generic information about the unit that is not dependent on the type of unit
+            short: true
+          Socket:
+            type: SocketSection
+            comment: Information about the socket or FIFO it supervises
+            short: true
+          Install:
+            type: InstallSection
+            comment: Installation information for the unit
+            short: true
+  unit/device.go:
+    structs:
+      DeviceFile:
+        comment: DeviceFile represents information about a device unit as exposed in the sysfs/udev(7) device tree
+        embedded: systemdconf.File
+        fields:
+          Unit:
+            type: UnitSection
+            comment: Generic information about the unit that is not dependent on the type of unit
+            short: true
+          Install:
+            type: InstallSection
+            comment: Installation information for the unit
+            short: true
+  unit/mount.go:
+    structs:
+      MountSection:
+        comment: MountSection represents information about the file system mount points it supervises
+        embedded:
+          - systemdconf.Section
+          - ExecOptions
+          - KillOptions
+          - ResourceControlOptions
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.mount.html#Options
+      MountFile:
+        comment: MountFile represents information about a file system mount point controlled and supervised by systemd
+        embedded: systemdconf.File
+        fields:
+          Unit:
+            type: UnitSection
+            comment: Generic information about the unit that is not dependent on the type of unit
+            short: true
+          Mount:
+            type: MountSection
+            comment: Information about the file system mount points it supervises
+            short: true
+          Install:
+            type: InstallSection
+            comment: Installation information for the unit
+            short: true
+  unit/automount.go:
+    structs:
+      AutomountSection:
+        comment: AutomountSection represents information about the file system automount points it supervises
+        embedded: systemdconf.Section
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.automount.html#Options
+      AutomountFile:
+        comment: AutomountFile represents information about a file system automount point controlled and supervised by systemd
+        embedded: systemdconf.File
+        fields:
+          Unit:
+            type: UnitSection
+            comment: Generic information about the unit that is not dependent on the type of unit
+            short: true
+          Automount:
+            type: AutomountSection
+            comment: Information about the file system automount points it supervises
+            short: true
+          Install:
+            type: InstallSection
+            comment: Installation information for the unit
+            short: true
+  unit/swap.go:
+    structs:
+      SwapSection:
+        comment: SwapSection represents information about the swap device it supervises
+        embedded:
+          - systemdconf.Section
+          - ExecOptions
+          - KillOptions
+          - ResourceControlOptions
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.swap.html#Options
+      SwapFile:
+        comment: SwapFile represents information about a swap device or file for memory paging controlled and supervised by systemd
+        embedded: systemdconf.File
+        fields:
+          Unit:
+            type: UnitSection
+            comment: Generic information about the unit that is not dependent on the type of unit
+            short: true
+          Swap:
+            type: SwapSection
+            comment: Information about the swap device it supervises
+            short: true
+          Install:
+            type: InstallSection
+            comment: Installation information for the unit
+            short: true
+  unit/target.go:
+    structs:
+      TargetFile:
+        comment: TargetFile represents information about a target unit of systemd, which is used for grouping units and as well-known synchronization points during start-up
+        embedded: systemdconf.File
+        fields:
+          Unit:
+            type: UnitSection
+            comment: Generic information about the unit that is not dependent on the type of unit
+            short: true
+          Install:
+            type: InstallSection
+            comment: Installation information for the unit
+            short: true
+  unit/path.go:
+    structs:
+      PathSection:
+        comment: PathSection represents information about the path(s) it monitors
+        embedded: systemdconf.Section
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.path.html#Options
+      PathFile:
+        comment: PathFile represents information about a path monitored by systemd, for path-based activation
+        embedded: systemdconf.File
+        fields:
+          Unit:
+            type: UnitSection
+            comment: Generic information about the unit that is not dependent on the type of unit
+            short: true
+          Path:
+            type: PathSection
+            comment: Information about the path(s) it monitors
+            short: true
+          Install:
+            type: InstallSection
+            comment: Installation information for the unit
+            short: true
+  unit/timer.go:
+    structs:
+      TimerSection:
+        comment: TimerSection represents information about the timer it defines
+        embedded: systemdconf.Section
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.timer.html#Options
+      TimerFile:
+        comment: TimerFile represents information about a timer controlled and supervised by systemd, for timer-based activation
+        embedded: systemdconf.File
+        fields:
+          Unit:
+            type: UnitSection
+            comment: Generic information about the unit that is not dependent on the type of unit
+            short: true
+          Timer:
+            type: TimerSection
+            comment: Information about the timer it defines
+            short: true
+          Install:
+            type: InstallSection
+            comment: Installation information for the unit
+            short: true
+  unit/slice.go:
+    structs:
+      SliceFile:
+        comment: SliceFile represents information about a slice unit. A slice unit is a concept for hierarchically managing resources of a group of processes
+        embedded: systemdconf.File
+        fields:
+          Unit:
+            type: UnitSection
+            comment: Generic information about the unit that is not dependent on the type of unit
+            short: true
+          Install:
+            type: InstallSection
+            comment: Installation information for the unit
+            short: true
+
+  network/timesyncd.go:
+    comment: NTP network time synchronization parameters
+    structs:
+      .Resolve:
+        comment: NTP network time synchronization parameters
+        fields: https://www.freedesktop.org/software/systemd/man/timesyncd.conf.html#Options
+  network/resolved.go:
+    comment: local DNS and LLMNR name resolution parameters
+    structs:
+      .Resolve:
+        comment: local DNS and LLMNR name resolution parameters
+        fields: https://www.freedesktop.org/software/systemd/man/resolved.conf.html#Options
+  network/networkd.go:
+    comment: global network parameters
+    structs:
+      .Network:
+        comment: global network parameters
+        fields: https://www.freedesktop.org/software/systemd/man/networkd.conf.html#%5BNetwork%5D%20Section%20Options
+      .DHCP:
+        comment: DHCP Unique Identifier (DUID) value used by DHCP protocol
+        fields: https://www.freedesktop.org/software/systemd/man/networkd.conf.html#%5BDHCP%5D%20Section%20Options
+  network/link.go:
+    comment: network link configuration is performed by the net_setup_link udev builtin
+    structs:
+      .Service:
+        comment: parameters which determines if a given link file may be applied to a given device
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.link.html#%5BMatch%5D%20Section%20Options
+      .Link:
+        comment: parameters how the device should be configured
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.link.html#%5BLink%5D%20Section%20Options
+  network/dnssd.go:
+    name: DNSSD
+    comment: DNS-SD setup configuration is performed by systemd-resolved
+    structs:
+      .Service:
+        comment: discoverable network service announced in a local network with Multicast DNS broadcasts
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.dnssd.html#%5BService%5D%20Section%20Options
+  network/nspawn.go:
+    comment: runtime configuration for a local container, and is used used by systemd-nspawn
+    structs:
+      .Exec:
+        comment: execution parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.nspawn.html#%5BExec%5D%20Section%20Options
+      .Files:
+        comment: parameters configuring the file system of the container
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.nspawn.html#%5BFiles%5D%20Section%20Options
+      .Network:
+        comment: parameters configuring the network connectivity of the container
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.nspawn.html#%5BNetwork%5D%20Section%20Options
+  network/network.go:
+    comment: network setup configuration is performed by systemd-networkd
+    structs:
+      .Match:
+        comment: parameters which determines if a given network file may be applied to a given device
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BMatch%5D%20Section%20Options
+      .Link:
+        comment: link parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BLink%5D%20Section%20Options
+      .Network:
+        comment: parameters how the device should be configured
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BNetwork%5D%20Section%20Options
+      .Address:
+        comment: address parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BAddress%5D%20Section%20Options
+      .Neighbor:
+        comment: a permanent, static entry to the neighbor table (IPv6) or ARP table (IPv4) for the given hardware address on the links matched for the network
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BNeighbor%5D%20Section%20Options
+      .IPv6AddressLabel:
+        comment: IPv6 address label parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BIPv6AddressLabel%5D%20Section%20Options
+      .RoutingPolicyRule:
+        comment: routing policy rule parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BRoutingPolicyRule%5D%20Section%20Options
+      .NextHop:
+        comment: the kernels nexthop tables entry parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BNextHop%5D%20Section%20Options
+      .Route:
+        comment: route parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BRoute%5D%20Section%20Options
+      .DHCPv4:
+        comment: DHCPv4 client parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BDHCPv4%5D%20Section%20Options
+      .DHCPv6:
+        comment: DHCPv6 client parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BDHCPv6%5D%20Section%20Options
+      .IPv6AcceptRA:
+        comment: IPv6 Router Advertisement (RA) client parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BIPv6AcceptRA%5D%20Section%20Options
+      .DHCPServer:
+        comment: DHCP server parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BDHCPServer%5D%20Section%20Options
+      .IPv6PrefixDelegation:
+        comment: settings for sending IPv6 Router Advertisements and whether to act as a router
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BIPv6PrefixDelegation%5D%20Section%20Options
+      .IPv6Prefix:
+        comment: IPv6 prefix that are announced via Router Advertisements
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BIPv6Prefix%5D%20Section%20Options
+      .IPv6RoutePrefix:
+        comment: IPv6 prefix route that are announced via Router Advertisements
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BIPv6RoutePrefix%5D%20Section%20Options
+      .Bridge:
+        comment: bridge parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BBridge%5D%20Section%20Options
+      .BridgeFDB:
+        comment: forwarding database table of a port
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BBridgeFDB%5D%20Section%20Options
+      .CAN:
+        comment: Controller Area Network (CAN bus) parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BCAN%5D%20Section%20Options
+      .TrafficControlQueueingDiscipline:
+        comment: traffic control parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BTrafficControlQueueingDiscipline%5D%20Section%20Options
+      .BridgeVLAN:
+        comment: VLAN ID configuration of a bridge port
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BBridgeVLAN%5D%20Section%20Options
+  network/netdev.go:
+    comment: Virtual Network Device parameters
+    structs:
+      .Match:
+        comment: parameters which determines if a given virtual network device may be created
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMatch%5D%20Section%20Options
+      .NetDev:
+        comment: Virtual Network Device parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BNetDev%5D%20Section%20Options
+      .Bridge:
+        comment: netdev of kind "bridge" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BBridge%5D%20Section%20Options
+      .VLAN:
+        comment: netdev of kind "vlan" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BVLAN%5D%20Section%20Options
+      .MACVLAN:
+        comment: netdev of kind "macvlan" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMACVLAN%5D%20Section%20Options
+      .MACVTAP:
+        comment: netdev of kind "macvtap" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMACVLAN%5D%20Section%20Options
+      .IPVLAN:
+        comment: netdev of kind "ipvlan" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BIPVLAN%5D%20Section%20Options
+      .IPVTAP:
+        comment: netdev of kind "ipvtap" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BIPVLAN%5D%20Section%20Options
+      .VXLAN:
+        comment: netdev of kind "vxlan" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BVXLAN%5D%20Section%20Options
+      .GENEVE:
+        comment: netdev of kind "geneve" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BGENEVE%5D%20Section%20Options
+      .L2TP:
+        comment: netdev of kind "l2tp" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BL2TP%5D%20Section%20Options
+      .L2TPSession:
+        comment: netdev of kind "l2tp" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BL2TPSession%5D%20Section%20Options
+      .MACsec:
+        comment: netdev of kind "macsec" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMACsec%5D%20Section%20Options
+      .MACsecReceiveChannel:
+        comment: netdev of kind "macsec" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMACsecReceiveChannel%5D%20Section%20Options
+      .MACsecTransmitAssociation:
+        comment: netdev of kind "macsec" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMACsecTransmitAssociation%5D%20Section%20Options
+      .MACsecReceiveAssociation:
+        comment: netdev of kind "macsec" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMACsecReceiveAssociation%5D%20Section%20Options
+      .Tunnel:
+        comment: netdev of kind "ipip", "sit", "gre", "gretap", "ip6gre", "ip6gretap", "vti", "vti6", "ip6tnl", and "erspan" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BTunnel%5D%20Section%20Options
+      .FooOverUDP:
+        comment: netdev of kind "fou" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BFooOverUDP%5D%20Section%20Options
+      .Peer:
+        comment: netdev of kind "veth" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BPeer%5D%20Section%20Options
+      .VXCAN:
+        comment: netdev of kind "vxcan" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BVXCAN%5D%20Section%20Options
+      .Tun:
+        comment: netdev of kind "tun" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BTun%5D%20Section%20Options
+      .Tap:
+        comment: netdev of kind "tap" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BTun%5D%20Section%20Options
+      .WireGuard:
+        comment: WireGuard parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BWireGuard%5D%20Section%20Options
+      .WireGuardPeer:
+        comment: WireGuardPeer peer parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BWireGuardPeer%5D%20Section%20Options
+      .Bond:
+        comment: Bond parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BBond%5D%20Section%20Options
+      .Xfrm:
+        comment: xfrm interface parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BXfrm%5D%20Section%20Options
+      .VRF:
+        comment: netdev of kind "vrf" parameters
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BVRF%5D%20Section%20Options
