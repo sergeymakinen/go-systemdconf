@@ -307,82 +307,89 @@ func TestUnmarshalFile(t *testing.T) {
 
 func TestUnmarshalShouldFail(t *testing.T) {
 	file := []byte(`[Section]
-Key=value
+Key=value 1
+Key=value 2
 `)
-	tests := []struct {
-		Name string
-		V    interface{}
-	}{
-		{
-			Name: "nil",
-			V:    nil,
-		},
-		{
-			Name: "non-struct file",
-			V:    true,
-		},
-		{
-			Name: "non-struct section",
-			V: struct {
-				Section1 struct {
-					Entry *string
-				}
-				Section2 bool
-			}{},
-		},
-		{
-			Name: "duplicated entry names",
-			V: struct {
-				Section1 struct {
-					Entry       string
-					Duplicated1 string `systemd:"Entry"`
-					Duplicated2 string `systemd:"Entry"`
-				}
-			}{},
-		},
-		{
-			Name: "unsupported entry type",
-			V: struct {
-				Section1 struct {
-					Entry string
-				}
-				Section2 struct {
-					Entry int
-				}
-			}{},
-		},
-		{
-			Name: "unsupported entry slice type",
-			V: struct {
-				Section1 struct {
-					Entry string
-				}
-				Section2 struct {
-					Entry []int
-				}
-			}{
-				Section2: struct {
-					Entry []int
-				}{
-					Entry: []int{0},
-				},
-			},
-		},
-	}
-	for _, td := range tests {
-		t.Run("Name="+td.Name+";as value", func(t *testing.T) {
-			err := Unmarshal(file, td.V)
-			if err == nil {
-				t.Error("Unmarshal() = nil; want non-nil")
-			}
-		})
-		t.Run("Name="+td.Name+";as pointer", func(t *testing.T) {
-			err := Unmarshal(file, &td.V)
-			if err == nil {
-				t.Error("Unmarshal() = nil; want non-nil")
+	run := func(t *testing.T, name, expected string, f func() error) {
+		t.Run(name, func(t *testing.T) {
+			err := f()
+			if err == nil || !strings.Contains(err.Error(), expected) {
+				t.Errorf("Unmarshal() = %v; does not contain %s", err, expected)
 			}
 		})
 	}
+	run(t, "invalid", "", func() error {
+		return Unmarshal([]byte("foo"), &struct{}{})
+	})
+	run(t, "not pointer", "expected non-nil pointer, got struct", func() error {
+		return Unmarshal(file, struct{}{})
+	})
+	run(t, "nil", "expected non-nil pointer, got nil", func() error {
+		return Unmarshal(file, nil)
+	})
+	run(t, "nil pointer", "expected non-nil pointer, got nil", func() error {
+		var s *struct{}
+		return Unmarshal(file, s)
+	})
+	run(t, "non-struct file", "expected non-nil pointer, got bool", func() error {
+		return Unmarshal(file, true)
+	})
+	run(t, "non-struct section", "expected struct, got int", func() error {
+		return Unmarshal(file, &struct {
+			Section int
+		}{})
+	})
+	//
+	run(t, "duplicated entry names", "conflicts with field struct", func() error {
+		return Unmarshal(file, &struct {
+			Section struct {
+				Key1 string `systemd:"Key"`
+				Key2 string `systemd:"Key"`
+			}
+		}{})
+	})
+	run(t, "unsupported entry type", "unsupported type", func() error {
+		return Unmarshal(file, &struct {
+			Section struct {
+				Key int
+			}
+		}{})
+	})
+	run(t, "unsupported entry slice type", "unsupported type", func() error {
+		return Unmarshal(file, &struct {
+			Section struct {
+				Key []int
+			}
+		}{})
+	})
+	run(t, "invalid duration", "invalid systemd duration", func() error {
+		return Unmarshal(file, &struct {
+			Section struct {
+				Key time.Duration
+			}
+		}{})
+	})
+	run(t, "invalid duration slice", "invalid systemd duration", func() error {
+		return Unmarshal(file, &struct {
+			Section struct {
+				Key []time.Duration
+			}
+		}{})
+	})
+	run(t, "invalid bool", "invalid systemd boolean", func() error {
+		return Unmarshal(file, &struct {
+			Section struct {
+				Key bool
+			}
+		}{})
+	})
+	run(t, "invalid bool slice", "invalid systemd boolean", func() error {
+		return Unmarshal(file, &struct {
+			Section struct {
+				Key []bool
+			}
+		}{})
+	})
 }
 
 type marshalType string
@@ -429,12 +436,32 @@ Key=ok
 	}
 }
 
+type unmarshalByValueType string
+
+func (m unmarshalByValueType) UnmarshalSystemd(value Value) error {
+	if value.String() == "fail" {
+		return errors.New("error")
+	}
+	return nil
+}
+
 func TestUnmarshalShouldFailOnUnmarshalerError(t *testing.T) {
 	file := []byte(`[Section]
 Key=fail
 `)
-	var s marshalTest
-	err := Unmarshal(file, &s)
+
+	var s1 marshalTest
+	err := Unmarshal(file, &s1)
+	if err == nil {
+		t.Errorf("Unmarshal() = nil; want non-nil")
+	}
+
+	var s2 struct {
+		Section struct {
+			Key unmarshalByValueType
+		}
+	}
+	err = Unmarshal(file, &s2)
 	if err == nil {
 		t.Errorf("Unmarshal() = nil; want non-nil")
 	}

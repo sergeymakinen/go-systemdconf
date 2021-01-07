@@ -29,7 +29,11 @@ type Unmarshaler interface {
 func Unmarshal(data []byte, v interface{}) error {
 	val := reflect.ValueOf(v)
 	if val.Kind() != reflect.Ptr || val.IsNil() {
-		return errors.New("expected value or pointer to value, got nil")
+		kind := "nil"
+		if val.IsValid() && val.Kind() != reflect.Ptr {
+			kind = val.Kind().String()
+		}
+		return errors.Errorf("expected non-nil pointer, got %s", kind)
 	}
 	var sections []*Section
 	sectionNames := map[string]*Section{}

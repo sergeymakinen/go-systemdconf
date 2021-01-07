@@ -2,6 +2,7 @@ package systemdconf
 
 import (
 	"io/ioutil"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -32,28 +33,32 @@ func TestMarshalFile(t *testing.T) {
 
 func TestMarshalShouldFail(t *testing.T) {
 	tests := []struct {
-		Name string
-		V    interface{}
+		Name, Expected string
+		V              interface{}
 	}{
 		{
-			Name: "nil",
-			V:    nil,
+			Name:     "nil",
+			Expected: "expected value, got nil",
+			V:        nil,
 		},
 		{
-			Name: "non-struct file",
-			V:    true,
+			Name:     "non-struct file",
+			Expected: "expected struct, got bool",
+			V:        true,
 		},
 		{
-			Name: "non-struct section",
+			Name:     "non-struct section",
+			Expected: "expected struct, got int",
 			V: struct {
 				Section1 struct {
 					Entry *string
 				}
-				Section2 bool
+				Section2 int
 			}{},
 		},
 		{
-			Name: "duplicated entry names",
+			Name:     "duplicated entry names",
+			Expected: "conflicts with field struct",
 			V: struct {
 				Section1 struct {
 					Entry       string
@@ -69,7 +74,8 @@ func TestMarshalShouldFail(t *testing.T) {
 			},
 		},
 		{
-			Name: "unsupported entry type",
+			Name:     "unsupported entry type",
+			Expected: "unsupported type",
 			V: struct {
 				Section1 struct {
 					Entry string
@@ -80,7 +86,8 @@ func TestMarshalShouldFail(t *testing.T) {
 			}{},
 		},
 		{
-			Name: "unsupported entry slice type",
+			Name:     "unsupported entry slice type",
+			Expected: "unsupported type",
 			V: struct {
 				Section1 struct {
 					Entry string
@@ -100,8 +107,8 @@ func TestMarshalShouldFail(t *testing.T) {
 	for _, td := range tests {
 		t.Run("Name="+td.Name, func(t *testing.T) {
 			_, err := Marshal(td.V)
-			if err == nil {
-				t.Error("Marshal() = _, nil; want non-nil")
+			if err == nil || !strings.Contains(err.Error(), td.Expected) {
+				t.Errorf("Marshal() = _, %v; does not contain %s", err, td.Expected)
 			}
 		})
 	}
