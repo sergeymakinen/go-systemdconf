@@ -36,7 +36,7 @@ func TestParseComplexFile(t *testing.T) {
 						end:   Position{51, 4, 14},
 					},
 					&Comment{
-						Text:  "a comment",
+						Text:  "# a comment",
 						begin: Position{54, 6, 1},
 						end:   Position{64, 6, 11},
 					},
@@ -78,19 +78,19 @@ func TestParseComplexFile(t *testing.T) {
 						end:   Position{336, 19, 18},
 					},
 					&Comment{
-						Text:  `this line is ignored\`,
+						Text:  `# this line is ignored\`,
 						begin: Position{242, 16, 5},
 						end:   Position{264, 16, 27},
 					},
 					&Comment{
-						Text:  "this line is ignored too",
+						Text:  "; this line is ignored too",
 						begin: Position{266, 17, 1},
 						end:   Position{291, 17, 26},
 					},
 					&Comment{
-						Text:  "test",
+						Text:  ";      test",
 						begin: Position{338, 20, 1},
-						end:   Position{343, 20, 6},
+						end:   Position{348, 20, 11},
 					},
 				},
 				begin: Position{208, 14, 1},
@@ -98,7 +98,7 @@ func TestParseComplexFile(t *testing.T) {
 			},
 		},
 		begin: Position{0, 1, 1},
-		end:   Position{351, 24, 1},
+		end:   Position{353, 24, 1},
 	}
 	if diff := cmp.Diff(expectedFile, file, cmp.AllowUnexported(File{}, Section{}, Entry{}, Include{}, Comment{})); diff != "" {
 		t.Errorf("Parser.Parse() mismatch (-want +got):\n%s", diff)

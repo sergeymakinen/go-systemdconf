@@ -46,7 +46,7 @@ func (f *File) End() Position   { return f.end }
 
 // Comment represents a single comment
 type Comment struct {
-	Text string // Trimmed comment text without # or ;
+	Text string // Comment text starting with # or ;
 
 	begin, end Position
 }

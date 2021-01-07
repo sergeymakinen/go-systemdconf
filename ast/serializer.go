@@ -45,7 +45,7 @@ func (s *Serializer) Serialize(node Node, w io.Writer) error {
 			}
 		}
 	case *Comment:
-		if _, err := w.Write([]byte("# " + strings.Trim(v.Text, whitespaceChars) + stringOrDefault(s.Newline, newline))); err != nil {
+		if _, err := w.Write([]byte(strings.Trim(v.Text, whitespaceChars) + stringOrDefault(s.Newline, newline))); err != nil {
 			return err
 		}
 	case *Include:

@@ -79,7 +79,7 @@ func (p *Parser) Parse() (*File, error) {
 		if strings.IndexAny(s, commentChars) == 0 {
 			s = p.trimRight(s, &end)
 			n := &Comment{
-				Text:  strings.TrimLeft(s[1:], whitespaceChars),
+				Text:  s,
 				begin: begin,
 				end:   end,
 			}

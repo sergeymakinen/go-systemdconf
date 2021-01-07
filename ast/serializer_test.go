@@ -36,8 +36,8 @@ KeyTwo=value 2  value 2 continued
 [Section C]
 KeyThree=value 2 value 2 continued continued 3
 # this line is ignored\
-# this line is ignored too
-# test
+; this line is ignored too
+;      test
 `
 	if diff := cmp.Diff(expected, buf.String(), nil); diff != "" {
 		t.Errorf("Serializer.Serialize() mismatch (-want +got):\n%s", diff)
