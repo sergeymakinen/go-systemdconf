@@ -158,7 +158,8 @@ func marshalSection(field *fieldInfo, v reflect.Value) (*ast.Section, error) {
 }
 
 func marshalEntries(field *fieldInfo, v reflect.Value) ([]*ast.Entry, error) {
-	if v.CanInterface() && field.Type.Implements(marshalerType) {
+	ft := indirectType(field.Type)
+	if v.CanInterface() && ft.Implements(marshalerType) {
 		value, err := v.Interface().(Marshaler).MarshalSystemd()
 		if err != nil {
 			return nil, &FieldError{
@@ -177,13 +178,13 @@ func marshalEntries(field *fieldInfo, v reflect.Value) ([]*ast.Entry, error) {
 		}
 		return entries, nil
 	}
-	if field.Type == durationType {
+	if ft == durationType {
 		return []*ast.Entry{{
 			Key:   field.Name,
 			Value: FormatDuration(v.Interface().(time.Duration)),
 		}}, nil
 	}
-	switch field.Type.Kind() {
+	switch ft.Kind() {
 	case reflect.Bool:
 		return []*ast.Entry{{
 			Key:   field.Name,
@@ -197,28 +198,28 @@ func marshalEntries(field *fieldInfo, v reflect.Value) ([]*ast.Entry, error) {
 	case reflect.Array, reflect.Slice:
 		var entries []*ast.Entry
 		for i := 0; i < v.Len(); i++ {
-			lt := indirectType(field.Type.Elem())
-			lv := indirect(v.Index(i))
-			if !lv.IsValid() {
+			et := indirectType(ft.Elem())
+			ev := indirect(v.Index(i))
+			if !ev.IsValid() {
 				continue
 			}
-			if lt == durationType {
+			if et == durationType {
 				entries = append(entries, &ast.Entry{
 					Key:   field.Name,
-					Value: FormatDuration(lv.Interface().(time.Duration)),
+					Value: FormatDuration(ev.Interface().(time.Duration)),
 				})
 				continue
 			}
-			switch lt.Kind() {
+			switch et.Kind() {
 			case reflect.Bool:
 				entries = append(entries, &ast.Entry{
 					Key:   field.Name,
-					Value: strconv.FormatBool(lv.Bool()),
+					Value: strconv.FormatBool(ev.Bool()),
 				})
 			case reflect.String:
 				entries = append(entries, &ast.Entry{
 					Key:   field.Name,
-					Value: lv.String(),
+					Value: ev.String(),
 				})
 			default:
 				return nil, &FieldError{

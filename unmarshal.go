@@ -122,7 +122,8 @@ func unmarshalSection(section *Section, v reflect.Value) error {
 }
 
 func unmarshalEntry(entry *Entry, field *fieldInfo, v reflect.Value) error {
-	if v.CanInterface() && field.Type.Implements(unmarshalerType) {
+	ft := indirectType(field.Type)
+	if v.CanInterface() && ft.Implements(unmarshalerType) {
 		if err := v.Interface().(Unmarshaler).UnmarshalSystemd(entry.Value); err != nil {
 			return &FieldError{
 				Struct: field.Struct,
@@ -147,7 +148,7 @@ func unmarshalEntry(entry *Entry, field *fieldInfo, v reflect.Value) error {
 			return nil
 		}
 	}
-	if field.Type == durationType {
+	if ft == durationType {
 		d, err := entry.Value.Duration()
 		if err != nil {
 			return &FieldError{
@@ -160,7 +161,7 @@ func unmarshalEntry(entry *Entry, field *fieldInfo, v reflect.Value) error {
 		v.Set(reflect.ValueOf(d))
 		return nil
 	}
-	switch field.Type.Kind() {
+	switch ft.Kind() {
 	case reflect.Bool:
 		b, err := entry.Value.Bool()
 		if err != nil {
@@ -176,9 +177,9 @@ func unmarshalEntry(entry *Entry, field *fieldInfo, v reflect.Value) error {
 		v.SetString(entry.Value.String())
 	case reflect.Array, reflect.Slice:
 		n := len(entry.Value)
-		if field.Type.Kind() == reflect.Slice {
+		if ft.Kind() == reflect.Slice {
 			if n > v.Cap() {
-				slice := reflect.MakeSlice(field.Type, n, n)
+				slice := reflect.MakeSlice(ft, n, n)
 				reflect.Copy(slice, v)
 				v.Set(slice)
 			}
@@ -188,12 +189,9 @@ func unmarshalEntry(entry *Entry, field *fieldInfo, v reflect.Value) error {
 			n = v.Len()
 		}
 		for i := 0; i < n; i++ {
-			lt := indirectType(field.Type.Elem())
-			lv := indirect(v.Index(i))
-			if !lv.IsValid() {
-				continue
-			}
-			if lt == durationType {
+			et := indirectType(ft.Elem())
+			ev := unmarshalIndirect(v.Index(i))
+			if et == durationType {
 				d, err := ParseDuration(entry.Value[i], time.Second)
 				if err != nil {
 					return &FieldError{
@@ -203,10 +201,10 @@ func unmarshalEntry(entry *Entry, field *fieldInfo, v reflect.Value) error {
 						Err:    err,
 					}
 				}
-				v.Index(i).Set(reflect.ValueOf(d))
+				ev.Set(reflect.ValueOf(d))
 				continue
 			}
-			switch lt.Kind() {
+			switch et.Kind() {
 			case reflect.Bool:
 				b, err := ParseBool(entry.Value[i])
 				if err != nil {
@@ -217,9 +215,9 @@ func unmarshalEntry(entry *Entry, field *fieldInfo, v reflect.Value) error {
 						Err:    err,
 					}
 				}
-				v.Index(i).SetBool(b)
+				ev.SetBool(b)
 			case reflect.String:
-				v.Index(i).SetString(entry.Value[i])
+				ev.SetString(entry.Value[i])
 			default:
 				return &FieldError{
 					Struct: field.Struct,
@@ -229,8 +227,8 @@ func unmarshalEntry(entry *Entry, field *fieldInfo, v reflect.Value) error {
 				}
 			}
 		}
-		if field.Type.Kind() == reflect.Array && len(entry.Value) < v.Len() {
-			zero := reflect.Zero(field.Type.Elem())
+		if ft.Kind() == reflect.Array && len(entry.Value) < v.Len() {
+			zero := reflect.Zero(ft.Elem())
 			for i := len(entry.Value); i < v.Len(); i++ {
 				v.Index(i).Set(zero)
 			}

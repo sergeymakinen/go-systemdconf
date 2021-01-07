@@ -2,6 +2,7 @@ package systemdconf
 
 import (
 	"io/ioutil"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ type fileTest struct {
 	Section1 *struct {
 		*Section
 		Key1, Key2 Value
+		Key3       **Value
 	}
 	Section3 struct {
 		Key Value
@@ -33,18 +35,47 @@ type fileTest struct {
 	} `systemd:"X-Section2"`
 	Bool struct {
 		True, False bool
-		Key         []bool
+		Keys1       []bool
+		Keys2       [10]**bool
+		Key3        **bool
 	}
 	Duration struct {
-		Key []time.Duration
+		Key1  time.Duration
+		Keys2 []time.Duration
+		Keys3 [10]**time.Duration
+		Key4  **time.Duration
+	}
+	String struct {
+		Key1  string
+		Keys2 []string
+		Keys3 [10]**string
+		Key4  **string
 	}
 }
 
 func TestUnmarshalFile(t *testing.T) {
 	b, err := ioutil.ReadFile("testdata/unmarshal.conf")
 	if err != nil {
-		panic("Error reading testdata/unmarshal.conf: " + err.Error())
+		panic("failed to read testdata/unmarshal.conf: " + err.Error())
 	}
+
+	ptrValue := &Value{"value 1", "value 2"}
+	boolTrue := true
+	ptrBoolTrue := &boolTrue
+	boolFalse := false
+	ptrBoolFalse := &boolFalse
+	duration3Min := 3 * time.Minute
+	ptrDuration3Min := &duration3Min
+	duration3Sec := 3 * time.Second
+	ptrDuration3Sec := &duration3Sec
+	duration3Hours := 3 * time.Hour
+	ptrDuration3Hours := &duration3Hours
+	stringValue1 := "value 1"
+	ptrStringValue1 := &stringValue1
+	stringValue2 := "value 2"
+	ptrStringValue2 := &stringValue2
+	stringValue := "value"
+	ptrStringValue := &stringValue
 	expected := fileTest{
 		File: File{
 			sections: []*Section{
@@ -79,6 +110,7 @@ func TestUnmarshalFile(t *testing.T) {
 		Section1: &struct {
 			*Section
 			Key1, Key2 Value
+			Key3       **Value
 		}{
 			Section: &Section{
 				name: "Section1",
@@ -95,6 +127,7 @@ func TestUnmarshalFile(t *testing.T) {
 			},
 			Key1: Value{"value 1"},
 			Key2: Value{"value 2"},
+			Key3: &ptrValue,
 		},
 		Section3: struct {
 			Key Value
@@ -122,11 +155,13 @@ func TestUnmarshalFile(t *testing.T) {
 		},
 		Bool: struct {
 			True, False bool
-			Key         []bool
+			Keys1       []bool
+			Keys2       [10]**bool
+			Key3        **bool
 		}{
 			True:  true,
 			False: false,
-			Key: []bool{
+			Keys1: []bool{
 				true,
 				true,
 				true,
@@ -140,11 +175,17 @@ func TestUnmarshalFile(t *testing.T) {
 				false,
 				false,
 			},
+			Keys2: [10]**bool{&ptrBoolTrue, &ptrBoolFalse},
+			Key3:  &ptrBoolTrue,
 		},
 		Duration: struct {
-			Key []time.Duration
+			Key1  time.Duration
+			Keys2 []time.Duration
+			Keys3 [10]**time.Duration
+			Key4  **time.Duration
 		}{
-			Key: []time.Duration{
+			Key1: 3 * time.Second,
+			Keys2: []time.Duration{
 				3*time.Hour + 3*time.Minute,
 				3 * time.Second,
 				3 * time.Second,
@@ -177,6 +218,19 @@ func TestUnmarshalFile(t *testing.T) {
 				3 * time.Microsecond,
 				infinity,
 			},
+			Keys3: [10]**time.Duration{&ptrDuration3Min, &ptrDuration3Sec},
+			Key4:  &ptrDuration3Hours,
+		},
+		String: struct {
+			Key1  string
+			Keys2 []string
+			Keys3 [10]**string
+			Key4  **string
+		}{
+			Key1:  "value",
+			Keys2: []string{"value 1", "value 2", "value 3"},
+			Keys3: [10]**string{&ptrStringValue1, &ptrStringValue2},
+			Key4:  &ptrStringValue,
 		},
 	}
 	var s fileTest
@@ -187,6 +241,7 @@ func TestUnmarshalFile(t *testing.T) {
 	if diff := cmp.Diff(expected, s, cmp.AllowUnexported(File{}, Section{})); diff != "" {
 		t.Errorf("Unmarshal() mismatch (-want +got):\n%s", diff)
 	}
+
 	expectedSections := []*Section{
 		{
 			name: "Section2",
@@ -205,6 +260,7 @@ func TestUnmarshalFile(t *testing.T) {
 	if diff := cmp.Diff(expectedSections, s.Unknown(), cmp.AllowUnexported(Section{})); diff != "" {
 		t.Errorf("File.Unknown() mismatch (-want +got):\n%s", diff)
 	}
+
 	expectedEntries := []*Entry{
 		{
 			Key:   "Key1",
@@ -218,6 +274,7 @@ func TestUnmarshalFile(t *testing.T) {
 	if diff := cmp.Diff(expectedEntries, s.Unknown()[0].Unknown(), nil); diff != "" {
 		t.Errorf("Section.Unknown() mismatch (-want +got):\n%s", diff)
 	}
+
 	expectedSections = []*Section{
 		{
 			name: "X-Section3",
@@ -236,6 +293,7 @@ func TestUnmarshalFile(t *testing.T) {
 	if diff := cmp.Diff(expectedSections, s.Extra(), cmp.AllowUnexported(Section{})); diff != "" {
 		t.Errorf("File.Extra() mismatch (-want +got):\n%s", diff)
 	}
+
 	expectedEntries = []*Entry{
 		{
 			Key:   "X-Key",
