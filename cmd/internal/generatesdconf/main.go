@@ -1,15 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"crypto/md5"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
-	"net/http"
-	gourl "net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -19,12 +14,13 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
+	"github.com/sergeymakinen/go-systemdconf/cmd/internal"
 	"golang.org/x/net/html"
 	"gopkg.in/yaml.v3"
 )
 
 func printUsage(w *os.File) {
-	fmt.Fprintf(w, "usage: generatesdconf config.yaml outdir\n")
+	fmt.Fprintf(w, "usage: generatesdconf config.yml outdir\n")
 	fmt.Fprintf(w, "generates systemd config file bindings\n")
 }
 
@@ -42,8 +38,8 @@ func main() {
 		usage()
 	}
 	cfgpath := flag.Arg(0)
-	if !exist(cfgpath) {
-		log.Fatalf("not found config %q", cfgpath)
+	if !internal.Exist(cfgpath) {
+		log.Fatalf("config %q not found", cfgpath)
 	}
 	b, err := ioutil.ReadFile(cfgpath)
 	if err != nil {
@@ -51,18 +47,18 @@ func main() {
 	}
 	var conf config
 	if err := yaml.Unmarshal(b, &conf); err != nil {
-		log.Fatal(err)
+		log.Fatal(errors.Wrap(err, "failed to parse config"))
 	}
 	outdir := flag.Arg(1)
-	if !exist(outdir) {
+	if !internal.Exist(outdir) {
 		log.Fatalf("not found outdir %q", outdir)
 	}
-	man, err := goquery.NewDocumentFromReader(read("https://www.freedesktop.org/software/systemd/man/index.html"))
+	man, err := goquery.NewDocumentFromReader(internal.Read("https://www.freedesktop.org/software/systemd/man/index.html"))
 	if err != nil {
 		log.Fatal(err)
 	}
 	systemdName = man.Find("body > span").Text()
-	if systemdName == "" {
+	if systemdName == "" || !strings.HasPrefix(systemdName, "systemd") {
 		log.Fatal("no systemd version")
 	}
 	for _, file := range conf.Files {
@@ -78,79 +74,24 @@ var (
 	newlineRE       = regexp.MustCompile(`[\n]{2,}`)
 	leadingSpaceRE  = regexp.MustCompile(`\n[ ]+`)
 	trailingSpaceRE = regexp.MustCompile(`[ ]+\n`)
-	keyNameRE       = regexp.MustCompile(`(\w+)=([^,]+)?`)
 	manSectionRE    = regexp.MustCompile(`\(\d\)`)
 	systemdName     string
 )
 
-func read(url string) io.Reader {
-	filename := filepath.Join(os.TempDir(), fmt.Sprintf("generatesdconf-%x", md5.Sum([]byte(url))))
-	if exist(filename) {
-		b, err := ioutil.ReadFile(filename)
-		if err != nil {
-			log.Fatal(errors.Wrapf(err, "failed to read %q", filename))
-		}
-		return bytes.NewBuffer(b)
-	}
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Fatal(errors.Wrapf(err, "failed to open %q", url))
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		log.Fatalf("status code error for %q: %d %s", url, resp.StatusCode, resp.Status)
-	}
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(errors.Wrapf(err, "failed to read %q", url))
-	}
-	if err := ioutil.WriteFile(filename, b, 0644); err != nil {
-		log.Fatal(errors.Wrapf(err, "failed to write %q", filename))
-	}
-	return bytes.NewBuffer(b)
-}
-
 func generate(url string) []configField {
-	u, err := gourl.Parse(url)
-	if err != nil {
-		log.Fatal(errors.Wrapf(err, "failed to parse %q", url))
-	}
-	header := u.Fragment
-	u.Fragment = ""
-	doc, err := goquery.NewDocumentFromReader(read(u.String()))
-	if err != nil {
-		log.Fatal(err)
-	}
 	var fields []configField
-	doc.Find(".refsect1:has(dl.variablelist)").Each(func(i int, s *goquery.Selection) {
-		if v, ok := s.ChildrenFiltered("h2").Attr("id"); !ok || v != header {
-			return
+	for _, section := range internal.FindDirectives(url).Sections {
+		for _, directive := range section.Directives {
+			desc := nodeToString(directive.Description.Get(0))
+			desc = leadingSpaceRE.ReplaceAllString(desc, "\n")
+			desc = trailingSpaceRE.ReplaceAllString(desc, "\n")
+			desc = strings.TrimSpace(newlineRE.ReplaceAllString(desc, "\n\n"))
+			desc = wordwrap(desc, 100)
+			fields = append(fields, configField{
+				Name:    directive.Name,
+				Comment: desc,
+			})
 		}
-		s.Find("dl.variablelist").ChildrenFiltered("dt").Each(func(i int, s *goquery.Selection) {
-			var keys []string
-			for _, match := range keyNameRE.FindAllStringSubmatch(s.Text(), -1) {
-				keys = append(keys, match[1])
-			}
-			if len(keys) == 0 {
-				return
-			}
-			dd := nodeToString(s.NextFiltered("dd").Get(0))
-			dd = leadingSpaceRE.ReplaceAllString(dd, "\n")
-			dd = trailingSpaceRE.ReplaceAllString(dd, "\n")
-			dd = strings.TrimSpace(newlineRE.ReplaceAllString(dd, "\n\n"))
-			for _, v := range keys {
-				fields = append(fields, configField{
-					Name:    v,
-					Comment: wordwrap(dd, 100),
-				})
-			}
-			if len(fields) == 0 {
-				log.Panicf("empty header %q", header)
-			}
-		})
-	})
-	if len(fields) == 0 {
-		log.Panicf("not found header %q", header)
 	}
 	return fields
 }
@@ -248,21 +189,10 @@ func indent(s string) string {
 
 func comment(s string) string {
 	lines := strings.Split(s, "\n")
-	for i, _ := range lines {
+	for i := range lines {
 		lines[i] = "// " + lines[i]
 	}
 	return strings.Join(lines, "\n")
-}
-
-func exist(path string) bool {
-	if _, err := os.Stat(path); err == nil {
-		return true
-	} else if os.IsNotExist(err) {
-		return false
-	} else {
-		log.Panic(err)
-		return false
-	}
 }
 
 func wordwrap(s string, limit int) string {
