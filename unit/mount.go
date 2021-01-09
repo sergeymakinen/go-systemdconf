@@ -1,10 +1,21 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package unit
 
 import "github.com/sergeymakinen/go-systemdconf"
 
+// MountFile represents systemd.mount — Mount unit configuration
+// (see https://www.freedesktop.org/software/systemd/man/systemd.mount.html for details)
+type MountFile struct {
+	systemdconf.File
+
+	Unit    UnitSection    // Generic information about the unit that is not dependent on the type of unit
+	Mount   MountSection   // Information about the file system mount points it supervises
+	Install InstallSection // Installation information for the unit
+}
+
 // MountSection represents information about the file system mount points it supervises
+// (see https://www.freedesktop.org/software/systemd/man/systemd.mount.html#Options for details)
 type MountSection struct {
 	systemdconf.Section
 	ExecOptions
@@ -14,12 +25,12 @@ type MountSection struct {
 	// Takes an absolute path of a device node, file or other resource to mount. See mount for details. If this refers to a device
 	// node, a dependency on the respective device unit is automatically created. (See systemd.device for more information.)
 	// This option is mandatory. Note that the usual specifier expansion is applied to this setting, literal percent characters
-	// should hence be written as "%%".
+	// should hence be written as "%%". If this mount is a bind mount and the specified path does not exist yet it is created as directory.
 	What systemdconf.Value
 
-	// Takes an absolute path of a directory for the mount point; in particular, the destination cannot be a symbolic link. If the
-	// mount point does not exist at the time of mounting, it is created. This string must be reflected in the unit filename. (See
-	// above.) This option is mandatory.
+	// Takes an absolute path of a file or directory for the mount point; in particular, the destination cannot be a symbolic link.
+	// If the mount point does not exist at the time of mounting, it is created as directory. This string must be reflected in the
+	// unit filename. (See above.) This option is mandatory.
 	Where systemdconf.Value
 
 	// Takes a string for the file system type. See mount for details. This setting is optional.
@@ -38,6 +49,11 @@ type MountSection struct {
 	// Defaults to off.
 	LazyUnmount systemdconf.Value
 
+	// Takes a boolean argument. If false, a mount point that shall be mounted read-write but cannot be mounted so is retried to
+	// be mounted read-only. If true the operation will fail immediately after the read-write mount attempt did not succeed.
+	// This corresponds with mount's -w switch. Defaults to off.
+	ReadWriteOnly systemdconf.Value
+
 	// Takes a boolean argument. If true, force an unmount (in case of an unreachable NFS system). This corresponds with umount's
 	// -f switch. Defaults to off.
 	ForceUnmount systemdconf.Value
@@ -52,13 +68,4 @@ type MountSection struct {
 	// a time span value such as "5min 20s". Pass 0 to disable the timeout logic. The default value is set from DefaultTimeoutStartSec=
 	// option in systemd-system.conf.
 	TimeoutSec systemdconf.Value
-}
-
-// MountFile represents information about a file system mount point controlled and supervised by systemd
-type MountFile struct {
-	systemdconf.File
-
-	Unit    UnitSection    // Generic information about the unit that is not dependent on the type of unit
-	Mount   MountSection   // Information about the file system mount points it supervises
-	Install InstallSection // Installation information for the unit
 }

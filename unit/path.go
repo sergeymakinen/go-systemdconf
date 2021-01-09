@@ -1,10 +1,21 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package unit
 
 import "github.com/sergeymakinen/go-systemdconf"
 
+// PathFile represents systemd.path — Path unit configuration
+// (see https://www.freedesktop.org/software/systemd/man/systemd.path.html for details)
+type PathFile struct {
+	systemdconf.File
+
+	Unit    UnitSection    // Generic information about the unit that is not dependent on the type of unit
+	Path    PathSection    // Information about the path(s) it monitors
+	Install InstallSection // Installation information for the unit
+}
+
 // PathSection represents information about the path(s) it monitors
+// (see https://www.freedesktop.org/software/systemd/man/systemd.path.html#Options for details)
 type PathSection struct {
 	systemdconf.Section
 
@@ -131,13 +142,4 @@ type PathSection struct {
 	// If MakeDirectory= is enabled, use the mode specified here to create the directories in question. Takes an access mode in
 	// octal notation. Defaults to 0755.
 	DirectoryMode systemdconf.Value
-}
-
-// PathFile represents information about a path monitored by systemd, for path-based activation
-type PathFile struct {
-	systemdconf.File
-
-	Unit    UnitSection    // Generic information about the unit that is not dependent on the type of unit
-	Path    PathSection    // Information about the path(s) it monitors
-	Install InstallSection // Installation information for the unit
 }

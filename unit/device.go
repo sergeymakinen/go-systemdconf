@@ -1,10 +1,11 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package unit
 
 import "github.com/sergeymakinen/go-systemdconf"
 
-// DeviceFile represents information about a device unit as exposed in the sysfs/udev(7) device tree
+// DeviceFile represents systemd.device — Device unit configuration
+// (see https://www.freedesktop.org/software/systemd/man/systemd.device.html for details)
 type DeviceFile struct {
 	systemdconf.File
 

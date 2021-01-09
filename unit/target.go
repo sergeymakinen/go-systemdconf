@@ -1,10 +1,11 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package unit
 
 import "github.com/sergeymakinen/go-systemdconf"
 
-// TargetFile represents information about a target unit of systemd, which is used for grouping units and as well-known synchronization points during start-up
+// TargetFile represents systemd.target — Target unit configuration
+// (see https://www.freedesktop.org/software/systemd/man/systemd.target.html for details)
 type TargetFile struct {
 	systemdconf.File
 

@@ -1,32 +1,80 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package network
 
 import "github.com/sergeymakinen/go-systemdconf"
 
-// DNSSDServiceSection represents discoverable network service announced in a local network with Multicast DNS broadcasts
-type DNSSDServiceSection struct {
+// DnssdFile represents systemd.dnssd — DNS-SD configuration
+// (see https://www.freedesktop.org/software/systemd/man/systemd.dnssd.html for details)
+type DnssdFile struct {
+	systemdconf.File
+
+	Service DnssdServiceSection // Discoverable network service announced in a local network with Multicast DNS broadcasts
+}
+
+// DnssdServiceSection represents discoverable network service announced in a local network with Multicast DNS broadcasts
+// (see https://www.freedesktop.org/software/systemd/man/systemd.dnssd.html#%5BService%5D%20Section%20Options for details)
+type DnssdServiceSection struct {
 	systemdconf.Section
 
 	// An instance name of the network service as defined in the section 4.1.1 of RFC 6763, e.g. "webserver".
 	//
 	// The option supports simple specifier expansion. The following expansions are understood:
 	//
-	// 	+-----------+----------------+--------------------------------+
-	// 	| SPECIFIER |    MEANING     |            DETAILS             |
-	// 	+-----------+----------------+--------------------------------+
-	// 	| "%m"      | Machine ID     | The machine ID of the running  |
-	// 	|           |                | system, formatted as string.   |
-	// 	|           |                | See machine-id for more        |
-	// 	|           |                | information.                   |
-	// 	| "%b"      | Boot ID        | The boot ID of the running     |
-	// 	|           |                | system, formatted as           |
-	// 	|           |                | string. See random for more    |
-	// 	|           |                | information.                   |
-	// 	| "%H"      | Host name      | The hostname of the running    |
-	// 	|           |                | system.                        |
-	// 	| "%v"      | Kernel release | Identical to uname -r output.  |
-	// 	+-----------+----------------+--------------------------------+
+	// 	+-----------+-----------------------------+--------------------------------+
+	// 	| SPECIFIER |           MEANING           |            DETAILS             |
+	// 	+-----------+-----------------------------+--------------------------------+
+	// 	| "%a"      | Architecture                | A short string identifying     |
+	// 	|           |                             | the architecture of the        |
+	// 	|           |                             | local system. A string such    |
+	// 	|           |                             | as x86, x86-64 or arm64. See   |
+	// 	|           |                             | the architectures defined      |
+	// 	|           |                             | for ConditionArchitecture= in  |
+	// 	|           |                             | systemd.unit for a full list.  |
+	// 	| "%b"      | Boot ID                     | The boot ID of the running     |
+	// 	|           |                             | system, formatted as           |
+	// 	|           |                             | string. See random for more    |
+	// 	|           |                             | information.                   |
+	// 	| "%B"      | Operating system build ID   | The operating system build     |
+	// 	|           |                             | identifier of the running      |
+	// 	|           |                             | system, as read from           |
+	// 	|           |                             | the BUILD_ID= field of         |
+	// 	|           |                             | /etc/os-release. If not set,   |
+	// 	|           |                             | resolves to an empty string.   |
+	// 	|           |                             | See os-release for more        |
+	// 	|           |                             | information.                   |
+	// 	| "%H"      | Host name                   | The hostname of the running    |
+	// 	|           |                             | system.                        |
+	// 	| "%m"      | Machine ID                  | The machine ID of the running  |
+	// 	|           |                             | system, formatted as string.   |
+	// 	|           |                             | See machine-id for more        |
+	// 	|           |                             | information.                   |
+	// 	| "%o"      | Operating system ID         | The operating system           |
+	// 	|           |                             | identifier of the running      |
+	// 	|           |                             | system, as read from the ID=   |
+	// 	|           |                             | field of /etc/os-release.      |
+	// 	|           |                             | See os-release for more        |
+	// 	|           |                             | information.                   |
+	// 	| "%v"      | Kernel release              | Identical to uname -r output.  |
+	// 	| "%w"      | Operating system version ID | The operating system           |
+	// 	|           |                             | version identifier of the      |
+	// 	|           |                             | running system, as read from   |
+	// 	|           |                             | the VERSION_ID= field of       |
+	// 	|           |                             | /etc/os-release. If not set,   |
+	// 	|           |                             | resolves to an empty string.   |
+	// 	|           |                             | See os-release for more        |
+	// 	|           |                             | information.                   |
+	// 	| "%W"      | Operating system variant ID | The operating system           |
+	// 	|           |                             | variant identifier of the      |
+	// 	|           |                             | running system, as read from   |
+	// 	|           |                             | the VARIANT_ID= field of       |
+	// 	|           |                             | /etc/os-release. If not set,   |
+	// 	|           |                             | resolves to an empty string.   |
+	// 	|           |                             | See os-release for more        |
+	// 	|           |                             | information.                   |
+	// 	| "%%"      | Single percent sign         | Use "%%" in place of "%" to    |
+	// 	|           |                             | specify a single percent sign. |
+	// 	+-----------+-----------------------------+--------------------------------+
 	Name systemdconf.Value
 
 	// A type of the network service as defined in the section 4.1.2 of RFC 6763, e.g. "_http._tcp".
@@ -58,11 +106,4 @@ type DNSSDServiceSection struct {
 	// created for the service. If the empty string is assigned to this option, the list is reset and all prior assignments will
 	// have no effect.
 	TxtData systemdconf.Value
-}
-
-// DNSSDFile represents DNS-SD setup configuration is performed by systemd-resolved
-type DNSSDFile struct {
-	systemdconf.File
-
-	Service DNSSDServiceSection // Discoverable network service announced in a local network with Multicast DNS broadcasts
 }

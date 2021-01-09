@@ -1,10 +1,11 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package unit
 
 import "github.com/sergeymakinen/go-systemdconf"
 
-// SliceFile represents information about a slice unit. A slice unit is a concept for hierarchically managing resources of a group of processes
+// SliceFile represents systemd.slice — Slice unit configuration
+// (see https://www.freedesktop.org/software/systemd/man/systemd.slice.html for details)
 type SliceFile struct {
 	systemdconf.File
 

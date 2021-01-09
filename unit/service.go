@@ -1,10 +1,21 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package unit
 
 import "github.com/sergeymakinen/go-systemdconf"
 
+// ServiceFile represents systemd.service — Service unit configuration
+// (see https://www.freedesktop.org/software/systemd/man/systemd.service.html for details)
+type ServiceFile struct {
+	systemdconf.File
+
+	Unit    UnitSection    // Generic information about the unit that is not dependent on the type of unit
+	Service ServiceSection // Information about the service and the process it supervises
+	Install InstallSection // Installation information for the unit
+}
+
 // ServiceSection represents information about the service and the process it supervises
+// (see https://www.freedesktop.org/software/systemd/man/systemd.service.html#Options for details)
 type ServiceSection struct {
 	systemdconf.Section
 	ExecOptions
@@ -40,19 +51,22 @@ type ServiceSection struct {
 	// exits. It will then start follow-up units. RemainAfterExit= is particularly useful for this type of service. Type=oneshot
 	// is the implied default if neither Type= nor ExecStart= are specified. Note that if this option is used without RemainAfterExit=
 	// the service will never enter "active" unit state, but directly transition from "activating" to "deactivating" or "dead"
-	// since no process is configured that shall run continously. In particular this means that after a service of this type ran
+	// since no process is configured that shall run continuously. In particular this means that after a service of this type ran
 	// (and which has RemainAfterExit= not set) it will not show up as started afterwards, but as dead.
 	//
 	// Behavior of dbus is similar to simple; however, it is expected that the service acquires a name on the D-Bus bus, as configured
 	// by BusName=. systemd will proceed with starting follow-up units after the D-Bus bus name has been acquired. Service units
 	// with this option configured implicitly gain dependencies on the dbus.socket unit. This type is the default if BusName=
-	// is specified.
+	// is specified. A service unit of this type is considered to be in the activating state until the specified bus name is acquired.
+	// It is considered activated while the bus name is taken. Once the bus name is released the service is considered being no longer
+	// functional which has the effect that the service manager attempts to terminate any remaining processes belonging to the
+	// service. Services that drop their bus name as part of their shutdown logic thus should be prepared to receive a SIGTERM (or
+	// whichever signal is configured in KillSignal=) as result.
 	//
 	// Behavior of notify is similar to exec; however, it is expected that the service sends a notification message via sd_notify
 	// or an equivalent call when it has finished starting up. systemd will proceed with starting follow-up units after this notification
 	// message has been sent. If this option is used, NotifyAccess= (see below) should be set to open access to the notification
-	// socket provided by systemd. If NotifyAccess= is missing or set to none, it will be forcibly set to main. Note that currently
-	// Type=notify will not work if used in combination with PrivateNetwork=yes.
+	// socket provided by systemd. If NotifyAccess= is missing or set to none, it will be forcibly set to main.
 	//
 	// Behavior of idle is very similar to simple; however, actual execution of the service program is delayed until all active
 	// jobs are dispatched. This may be used to avoid interleaving of output of shell services with the status output on the console.
@@ -95,7 +109,9 @@ type ServiceSection struct {
 	// nor indirectly), and the PID file must refer to a process already belonging to the service.
 	PIDFile systemdconf.Value
 
-	// Takes a D-Bus bus name that this service is reachable as. This option is mandatory for services where Type= is set to dbus.
+	// Takes a D-Bus destination name that this service shall use. This option is mandatory for services where Type= is set to dbus.
+	// It is recommended to always set this property if known to make it easy to map the service name to the D-Bus destination. In
+	// particular, systemctl service-log-level/service-log-target verbs make use of this.
 	BusName systemdconf.Value
 
 	// Commands with their arguments that are executed when this service is started. The value is split into zero or more command
@@ -178,6 +194,8 @@ type ServiceSection struct {
 	// Note that if any of the commands specified in ExecStartPre=, ExecStart=, or ExecStartPost= fail (and are not prefixed
 	// with "-", see above) or time out before the service is fully up, execution continues with commands specified in ExecStopPost=,
 	// the commands in ExecStop= are skipped.
+	//
+	// Note that the execution of ExecStartPost= is taken into account for the purpose of Before=/After= ordering constraints.
 	ExecStartPre systemdconf.Value
 
 	// Additional commands that are executed before or after the command in ExecStart=, respectively. Syntax is the same as for
@@ -198,6 +216,8 @@ type ServiceSection struct {
 	// Note that if any of the commands specified in ExecStartPre=, ExecStart=, or ExecStartPost= fail (and are not prefixed
 	// with "-", see above) or time out before the service is fully up, execution continues with commands specified in ExecStopPost=,
 	// the commands in ExecStop= are skipped.
+	//
+	// Note that the execution of ExecStartPost= is taken into account for the purpose of Before=/After= ordering constraints.
 	ExecStartPost systemdconf.Value
 
 	// Optional commands that are executed before the command(s) in ExecStartPre=. Syntax is the same as for ExecStart=, except
@@ -220,12 +240,14 @@ type ServiceSection struct {
 	// One additional, special environment variable is set: if known, $MAINPID is set to the main process of the daemon, and may
 	// be used for command lines like the following:
 	//
-	// 	/bin/kill -HUP $MAINPID
+	// 	ExecReload=kill -HUP $MAINPID
 	//
 	// Note however that reloading a daemon by sending a signal (as with the example line above) is usually not a good choice, because
 	// this is an asynchronous operation and hence not suitable to order reloads of multiple services against each other. It is
 	// strongly recommended to set ExecReload= to a command that not only triggers a configuration reload of the daemon, but also
-	// synchronously waits for it to complete.
+	// synchronously waits for it to complete. For example, dbus-broker uses the following:
+	//
+	// 	ExecReload=busctl call org.freedesktop.DBus \ /org/freedesktop/DBus org.freedesktop.DBus \ ReloadConfig
 	ExecReload systemdconf.Value
 
 	// Commands to execute to stop the service started via ExecStart=. This argument takes multiple command lines, following
@@ -270,6 +292,8 @@ type ServiceSection struct {
 	// Note that all commands that are configured with this setting are invoked with the result code of the service, as well as the
 	// main process' exit code and status, set in the $SERVICE_RESULT, $EXIT_CODE and $EXIT_STATUS environment variables,
 	// see systemd.exec for details.
+	//
+	// Note that the execution of ExecStopPost= is taken into account for the purpose of Before=/After= ordering constraints.
 	ExecStopPost systemdconf.Value
 
 	// Configures the time to sleep before restarting a service (as configured with Restart=). Takes a unit-less value in seconds,
@@ -277,25 +301,28 @@ type ServiceSection struct {
 	RestartSec systemdconf.Value
 
 	// Configures the time to wait for start-up. If a daemon service does not signal start-up completion within the configured
-	// time, the service will be considered failed and will be shut down again. Takes a unit-less value in seconds, or a time span
-	// value such as "5min 20s". Pass "infinity" to disable the timeout logic. Defaults to DefaultTimeoutStartSec= from the
-	// manager configuration file, except when Type=oneshot is used, in which case the timeout is disabled by default (see systemd-system.conf).
+	// time, the service will be considered failed and will be shut down again. The precise action depends on the TimeoutStartFailureMode=
+	// option. Takes a unit-less value in seconds, or a time span value such as "5min 20s". Pass "infinity" to disable the timeout
+	// logic. Defaults to DefaultTimeoutStartSec= from the manager configuration file, except when Type=oneshot is used,
+	// in which case the timeout is disabled by default (see systemd-system.conf).
 	//
 	// If a service of Type=notify sends "EXTEND_TIMEOUT_USEC=…", this may cause the start time to be extended beyond TimeoutStartSec=.
-	// The first receipt of this message must occur before TimeoutStartSec= is exceeded, and once the start time has exended beyond
-	// TimeoutStartSec=, the service manager will allow the service to continue to start, provided the service repeats "EXTEND_TIMEOUT_USEC=…"
-	// within the interval specified until the service startup status is finished by "READY=1". (see sd_notify).
+	// The first receipt of this message must occur before TimeoutStartSec= is exceeded, and once the start time has extended
+	// beyond TimeoutStartSec=, the service manager will allow the service to continue to start, provided the service repeats
+	// "EXTEND_TIMEOUT_USEC=…" within the interval specified until the service startup status is finished by "READY=1". (see
+	// sd_notify).
 	TimeoutStartSec systemdconf.Value
 
 	// This option serves two purposes. First, it configures the time to wait for each ExecStop= command. If any of them times out,
 	// subsequent ExecStop= commands are skipped and the service will be terminated by SIGTERM. If no ExecStop= commands are
-	// specified, the service gets the SIGTERM immediately. Second, it configures the time to wait for the service itself to stop.
-	// If it doesn't terminate in the specified time, it will be forcibly terminated by SIGKILL (see KillMode= in systemd.kill).
-	// Takes a unit-less value in seconds, or a time span value such as "5min 20s". Pass "infinity" to disable the timeout logic.
-	// Defaults to DefaultTimeoutStopSec= from the manager configuration file (see systemd-system.conf).
+	// specified, the service gets the SIGTERM immediately. This default behavior can be changed by the TimeoutStopFailureMode=
+	// option. Second, it configures the time to wait for the service itself to stop. If it doesn't terminate in the specified time,
+	// it will be forcibly terminated by SIGKILL (see KillMode= in systemd.kill). Takes a unit-less value in seconds, or a time
+	// span value such as "5min 20s". Pass "infinity" to disable the timeout logic. Defaults to DefaultTimeoutStopSec= from
+	// the manager configuration file (see systemd-system.conf).
 	//
 	// If a service of Type=notify sends "EXTEND_TIMEOUT_USEC=…", this may cause the stop time to be extended beyond TimeoutStopSec=.
-	// The first receipt of this message must occur before TimeoutStopSec= is exceeded, and once the stop time has exended beyond
+	// The first receipt of this message must occur before TimeoutStopSec= is exceeded, and once the stop time has extended beyond
 	// TimeoutStopSec=, the service manager will allow the service to continue to stop, provided the service repeats "EXTEND_TIMEOUT_USEC=…"
 	// within the interval specified, or terminates itself (see sd_notify).
 	TimeoutStopSec systemdconf.Value
@@ -312,20 +339,44 @@ type ServiceSection struct {
 	//
 	// If a service of Type=notify handles SIGABRT itself (instead of relying on the kernel to write a core dump) it can send "EXTEND_TIMEOUT_USEC=…"
 	// to extended the abort time beyond TimeoutAbortSec=. The first receipt of this message must occur before TimeoutAbortSec=
-	// is exceeded, and once the abort time has exended beyond TimeoutAbortSec=, the service manager will allow the service to
-	// continue to abort, provided the service repeats "EXTEND_TIMEOUT_USEC=…" within the interval specified, or terminates
+	// is exceeded, and once the abort time has extended beyond TimeoutAbortSec=, the service manager will allow the service
+	// to continue to abort, provided the service repeats "EXTEND_TIMEOUT_USEC=…" within the interval specified, or terminates
 	// itself (see sd_notify).
 	TimeoutAbortSec systemdconf.Value
 
 	// A shorthand for configuring both TimeoutStartSec= and TimeoutStopSec= to the specified value.
 	TimeoutSec systemdconf.Value
 
+	// These options configure the action that is taken in case a daemon service does not signal start-up within its configured
+	// TimeoutStartSec=, respectively if it does not stop within TimeoutStopSec=. Takes one of terminate, abort and kill. Both
+	// options default to terminate.
+	//
+	// If terminate is set the service will be gracefully terminated by sending the signal specified in KillSignal= (defaults
+	// to SIGTERM, see systemd.kill). If the service does not terminate the FinalKillSignal= is sent after TimeoutStopSec=.
+	// If abort is set, WatchdogSignal= is sent instead and TimeoutAbortSec= applies before sending FinalKillSignal=. This
+	// setting may be used to analyze services that fail to start-up or shut-down intermittently. By using kill the service is
+	// immediately terminated by sending FinalKillSignal= without any further timeout. This setting can be used to expedite
+	// the shutdown of failing services.
+	TimeoutStartFailureMode systemdconf.Value
+
+	// These options configure the action that is taken in case a daemon service does not signal start-up within its configured
+	// TimeoutStartSec=, respectively if it does not stop within TimeoutStopSec=. Takes one of terminate, abort and kill. Both
+	// options default to terminate.
+	//
+	// If terminate is set the service will be gracefully terminated by sending the signal specified in KillSignal= (defaults
+	// to SIGTERM, see systemd.kill). If the service does not terminate the FinalKillSignal= is sent after TimeoutStopSec=.
+	// If abort is set, WatchdogSignal= is sent instead and TimeoutAbortSec= applies before sending FinalKillSignal=. This
+	// setting may be used to analyze services that fail to start-up or shut-down intermittently. By using kill the service is
+	// immediately terminated by sending FinalKillSignal= without any further timeout. This setting can be used to expedite
+	// the shutdown of failing services.
+	TimeoutStopFailureMode systemdconf.Value
+
 	// Configures a maximum time for the service to run. If this is used and the service has been active for longer than the specified
 	// time it is terminated and put into a failure state. Note that this setting does not have any effect on Type=oneshot services,
 	// as they terminate immediately after activation completed. Pass "infinity" (the default) to configure no runtime limit.
 	//
 	// If a service of Type=notify sends "EXTEND_TIMEOUT_USEC=…", this may cause the runtime to be extended beyond RuntimeMaxSec=.
-	// The first receipt of this message must occur before RuntimeMaxSec= is exceeded, and once the runtime has exended beyond
+	// The first receipt of this message must occur before RuntimeMaxSec= is exceeded, and once the runtime has extended beyond
 	// RuntimeMaxSec=, the service manager will allow the service to continue to run, provided the service repeats "EXTEND_TIMEOUT_USEC=…"
 	// within the interval specified until the service shutdown is achieved by "STOPPING=1" (or termination). (see sd_notify).
 	RuntimeMaxSec systemdconf.Value
@@ -384,19 +435,25 @@ type ServiceSection struct {
 	Restart systemdconf.Value
 
 	// Takes a list of exit status definitions that, when returned by the main service process, will be considered successful
-	// termination, in addition to the normal successful exit code 0 and the signals SIGHUP, SIGINT, SIGTERM, and SIGPIPE. Exit
-	// status definitions can be numeric exit codes, termination code names, or termination signal names, separated by spaces.
-	// See the Process Exit Codes section in systemd.exec for a list of termination codes names (for this setting only the part
-	// without the "EXIT_" or "EX_" prefix should be used). See signal for a list of signal names.
+	// termination, in addition to the normal successful exit status 0 and the signals SIGHUP, SIGINT, SIGTERM, and SIGPIPE.
+	// Exit status definitions can be numeric termination statuses, termination status names, or termination signal names,
+	// separated by spaces. See the Process Exit Codes section in systemd.exec for a list of termination status names (for this
+	// setting only the part without the "EXIT_" or "EX_" prefix should be used). See signal for a list of signal names.
+	//
+	// Note that this setting does not change the mapping between numeric exit statuses and their names, i.e. regardless how this
+	// setting is used 0 will still be mapped to "SUCCESS" (and thus typically shown as "0/SUCCESS" in tool outputs) and 1 to "FAILURE"
+	// (and thus typically shown as "1/FAILURE"), and so on. It only controls what happens as effect of these exit statuses, and
+	// how it propagates to the state of the service as a whole.
 	//
 	// This option may appear more than once, in which case the list of successful exit statuses is merged. If the empty string is
 	// assigned to this option, the list is reset, all prior assignments of this option will have no effect.
 	//
-	// 	SuccessExitStatus=TEMPFAIL 250 SIGUSR1
+	// 	SuccessExitStatus=TEMPFAIL 250 SIGKILL
 	//
-	// Exit codes 75 (TEMPFAIL), 250, and the termination signal SIGKILL are considered clean service terminations.
+	// Exit status 75 (TEMPFAIL), 250, and the termination signal SIGKILL are considered clean service terminations.
 	//
-	// Note: systemd-analyze exit-codes may be used to list exit codes and translate between numerical code values and names.
+	// Note: systemd-analyze exit-status may be used to list exit statuses and translate between numerical status values and
+	// names.
 	SuccessExitStatus systemdconf.Value
 
 	// Takes a list of exit status definitions that, when returned by the main service process, will prevent automatic service
@@ -446,6 +503,12 @@ type ServiceSection struct {
 	// exec. Conversely, if an auxiliary process of the unit sends an sd_notify() message and immediately exits, the service
 	// manager might not be able to properly attribute the message to the unit, and thus will ignore it, even if NotifyAccess=all
 	// is set for it.
+	//
+	// Hence, to eliminate all race conditions involving lookup of the client's unit and attribution of notifications to units
+	// correctly, sd_notify_barrier() may be used. This call acts as a synchronization point and ensures all notifications
+	// sent before this call have been picked up by the service manager when it returns successfully. Use of sd_notify_barrier()
+	// is needed for clients which are not invoked by the service manager, otherwise this synchronization mechanism is unnecessary
+	// for attribution of notifications to the unit.
 	NotifyAccess systemdconf.Value
 
 	// Specifies the name of the socket units this service shall inherit socket file descriptors from when the service is started.
@@ -464,9 +527,10 @@ type ServiceSection struct {
 	// Configure how many file descriptors may be stored in the service manager for the service using sd_pid_notify_with_fds's
 	// "FDSTORE=1" messages. This is useful for implementing services that can restart after an explicit request or a crash without
 	// losing state. Any open sockets and other file descriptors which should not be closed during the restart may be stored this
-	// way. Application state can either be serialized to a file in /run, or better, stored in a memfd_create memory file descriptor.
+	// way. Application state can either be serialized to a file in /run/, or better, stored in a memfd_create memory file descriptor.
 	// Defaults to 0, i.e. no file descriptors may be stored in the service manager. All file descriptors passed to the service
-	// manager from a specific service are passed back to the service's main process on the next service restart. Any file descriptors
+	// manager from a specific service are passed back to the service's main process on the next service restart (see sd_listen_fds
+	// for details about the precise protocol used and the order in which the file descriptors are passed). Any file descriptors
 	// passed to the service manager are automatically closed when POLLHUP or POLLERR is seen on them, or when the service is fully
 	// stopped and no job is queued or being executed for it. If this option is used, NotifyAccess= (see above) should be set to open
 	// access to the notification socket provided by systemd. If NotifyAccess= is not set, it will be implicitly set to main.
@@ -486,19 +550,10 @@ type ServiceSection struct {
 	// If set to continue and a process of the service is killed by the kernel's OOM killer this is logged but the service continues
 	// running. If set to stop the event is logged but the service is terminated cleanly by the service manager. If set to kill and
 	// one of the service's processes is killed by the OOM killer the kernel is instructed to kill all remaining processes of the
-	// service, too. Defaults to the setting DefaultOOMPolicy= in system.conf is set to, except for services where Delegate=
-	// is turned on, where it defaults to continue.
+	// service, too. Defaults to the setting DefaultOOMPolicy= in systemd-system.conf is set to, except for services where
+	// Delegate= is turned on, where it defaults to continue.
 	//
 	// Use the OOMScoreAdjust= setting to configure whether processes of the unit shall be considered preferred or less preferred
 	// candidates for process termination by the Linux OOM killer logic. See systemd.exec for details.
 	OOMPolicy systemdconf.Value
-}
-
-// ServiceFile represents information about a process controlled and supervised by systemd
-type ServiceFile struct {
-	systemdconf.File
-
-	Unit    UnitSection    // Generic information about the unit that is not dependent on the type of unit
-	Service ServiceSection // Information about the service and the process it supervises
-	Install InstallSection // Installation information for the unit
 }

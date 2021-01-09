@@ -1,10 +1,21 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package unit
 
 import "github.com/sergeymakinen/go-systemdconf"
 
+// SocketFile represents systemd.socket — Socket unit configuration
+// (see https://www.freedesktop.org/software/systemd/man/systemd.socket.html for details)
+type SocketFile struct {
+	systemdconf.File
+
+	Unit    UnitSection    // Generic information about the unit that is not dependent on the type of unit
+	Socket  SocketSection  // Information about the socket or FIFO it supervises
+	Install InstallSection // Installation information for the unit
+}
+
 // SocketSection represents information about the socket or FIFO it supervises
+// (see https://www.freedesktop.org/software/systemd/man/systemd.socket.html#Options for details)
 type SocketSection struct {
 	systemdconf.Section
 	ExecOptions
@@ -22,15 +33,16 @@ type SocketSection struct {
 	// If the address string is a single number, it is read as port number to listen on via IPv6. Depending on the value of BindIPv6Only=
 	// (see below) this might result in the service being available via both IPv6 and IPv4 (default) or just via IPv6.
 	//
-	// If the address string is a string in the format v.w.x.y:z, it is read as IPv4 specifier for listening on an address v.w.x.y
-	// on a port z.
+	// If the address string is a string in the format "v.w.x.y:z", it is interpreted as IPv4 address v.w.x.y and port z.
 	//
-	// If the address string is a string in the format [x]:y, it is read as IPv6 address x on a port y. Note that this might make the service
-	// available via IPv4, too, depending on the BindIPv6Only= setting (see below).
+	// If the address string is a string in the format "[x]:y", it is interpreted as IPv6 address x and port y. An optional interface
+	// scope (interface name or number) may be specified after a "%" symbol: "[x]:y%dev". Interface scopes are only useful with
+	// link-local addresses, because the kernel ignores them in other cases. Note that if an address is specified as IPv6, it might
+	// still make the service available via IPv4 too, depending on the BindIPv6Only= setting (see below).
 	//
-	// If the address string is a string in the format "vsock:x:y", it is read as CID "x" on a port "y" address in the AF_VSOCK family.
-	// The CID is a unique 32-bit integer identifier in AF_VSOCK analogous to an IP address. Specifying the CID is optional, and
-	// may be set to the empty string.
+	// If the address string is a string in the format "vsock:x:y", it is read as CID x on a port y address in the AF_VSOCK family. The
+	// CID is a unique 32-bit integer identifier in AF_VSOCK analogous to an IP address. Specifying the CID is optional, and may
+	// be set to the empty string.
 	//
 	// Note that SOCK_SEQPACKET (i.e. ListenSequentialPacket=) is only available for AF_UNIX sockets. SOCK_STREAM (i.e.
 	// ListenStream=) when used for IP sockets refers to TCP sockets, SOCK_DGRAM (i.e. ListenDatagram=) to UDP.
@@ -60,15 +72,16 @@ type SocketSection struct {
 	// If the address string is a single number, it is read as port number to listen on via IPv6. Depending on the value of BindIPv6Only=
 	// (see below) this might result in the service being available via both IPv6 and IPv4 (default) or just via IPv6.
 	//
-	// If the address string is a string in the format v.w.x.y:z, it is read as IPv4 specifier for listening on an address v.w.x.y
-	// on a port z.
+	// If the address string is a string in the format "v.w.x.y:z", it is interpreted as IPv4 address v.w.x.y and port z.
 	//
-	// If the address string is a string in the format [x]:y, it is read as IPv6 address x on a port y. Note that this might make the service
-	// available via IPv4, too, depending on the BindIPv6Only= setting (see below).
+	// If the address string is a string in the format "[x]:y", it is interpreted as IPv6 address x and port y. An optional interface
+	// scope (interface name or number) may be specified after a "%" symbol: "[x]:y%dev". Interface scopes are only useful with
+	// link-local addresses, because the kernel ignores them in other cases. Note that if an address is specified as IPv6, it might
+	// still make the service available via IPv4 too, depending on the BindIPv6Only= setting (see below).
 	//
-	// If the address string is a string in the format "vsock:x:y", it is read as CID "x" on a port "y" address in the AF_VSOCK family.
-	// The CID is a unique 32-bit integer identifier in AF_VSOCK analogous to an IP address. Specifying the CID is optional, and
-	// may be set to the empty string.
+	// If the address string is a string in the format "vsock:x:y", it is read as CID x on a port y address in the AF_VSOCK family. The
+	// CID is a unique 32-bit integer identifier in AF_VSOCK analogous to an IP address. Specifying the CID is optional, and may
+	// be set to the empty string.
 	//
 	// Note that SOCK_SEQPACKET (i.e. ListenSequentialPacket=) is only available for AF_UNIX sockets. SOCK_STREAM (i.e.
 	// ListenStream=) when used for IP sockets refers to TCP sockets, SOCK_DGRAM (i.e. ListenDatagram=) to UDP.
@@ -98,15 +111,16 @@ type SocketSection struct {
 	// If the address string is a single number, it is read as port number to listen on via IPv6. Depending on the value of BindIPv6Only=
 	// (see below) this might result in the service being available via both IPv6 and IPv4 (default) or just via IPv6.
 	//
-	// If the address string is a string in the format v.w.x.y:z, it is read as IPv4 specifier for listening on an address v.w.x.y
-	// on a port z.
+	// If the address string is a string in the format "v.w.x.y:z", it is interpreted as IPv4 address v.w.x.y and port z.
 	//
-	// If the address string is a string in the format [x]:y, it is read as IPv6 address x on a port y. Note that this might make the service
-	// available via IPv4, too, depending on the BindIPv6Only= setting (see below).
+	// If the address string is a string in the format "[x]:y", it is interpreted as IPv6 address x and port y. An optional interface
+	// scope (interface name or number) may be specified after a "%" symbol: "[x]:y%dev". Interface scopes are only useful with
+	// link-local addresses, because the kernel ignores them in other cases. Note that if an address is specified as IPv6, it might
+	// still make the service available via IPv4 too, depending on the BindIPv6Only= setting (see below).
 	//
-	// If the address string is a string in the format "vsock:x:y", it is read as CID "x" on a port "y" address in the AF_VSOCK family.
-	// The CID is a unique 32-bit integer identifier in AF_VSOCK analogous to an IP address. Specifying the CID is optional, and
-	// may be set to the empty string.
+	// If the address string is a string in the format "vsock:x:y", it is read as CID x on a port y address in the AF_VSOCK family. The
+	// CID is a unique 32-bit integer identifier in AF_VSOCK analogous to an IP address. Specifying the CID is optional, and may
+	// be set to the empty string.
 	//
 	// Note that SOCK_SEQPACKET (i.e. ListenSequentialPacket=) is only available for AF_UNIX sockets. SOCK_STREAM (i.e.
 	// ListenStream=) when used for IP sockets refers to TCP sockets, SOCK_DGRAM (i.e. ListenDatagram=) to UDP.
@@ -125,13 +139,13 @@ type SocketSection struct {
 	// option described below.
 	ListenSequentialPacket systemdconf.Value
 
-	// Specifies a file system FIFO to listen on. This expects an absolute file system path as argument. Behavior otherwise is
-	// very similar to the ListenDatagram= directive above.
+	// Specifies a file system FIFO (see fifo for details) to listen on. This expects an absolute file system path as argument.
+	// Behavior otherwise is very similar to the ListenDatagram= directive above.
 	ListenFIFO systemdconf.Value
 
 	// Specifies a special file in the file system to listen on. This expects an absolute file system path as argument. Behavior
 	// otherwise is very similar to the ListenFIFO= directive above. Use this to open character device nodes as well as special
-	// files in /proc and /sys.
+	// files in /proc/ and /sys/.
 	ListenSpecial systemdconf.Value
 
 	// Specifies a Netlink family to create a socket for to listen on. This expects a short string referring to the AF_NETLINK family
@@ -139,18 +153,18 @@ type SocketSection struct {
 	// integer. Behavior otherwise is very similar to the ListenDatagram= directive above.
 	ListenNetlink systemdconf.Value
 
-	// Specifies a POSIX message queue name to listen on. This expects a valid message queue name (i.e. beginning with /). Behavior
-	// otherwise is very similar to the ListenFIFO= directive above. On Linux message queue descriptors are actually file descriptors
-	// and can be inherited between processes.
+	// Specifies a POSIX message queue name to listen on (see mq_overview for details). This expects a valid message queue name
+	// (i.e. beginning with "/"). Behavior otherwise is very similar to the ListenFIFO= directive above. On Linux message queue
+	// descriptors are actually file descriptors and can be inherited between processes.
 	ListenMessageQueue systemdconf.Value
 
 	// Specifies a USB FunctionFS endpoints location to listen on, for implementation of USB gadget functions. This expects
-	// an absolute file system path of functionfs mount point as the argument. Behavior otherwise is very similar to the ListenFIFO=
+	// an absolute file system path of a FunctionFS mount point as the argument. Behavior otherwise is very similar to the ListenFIFO=
 	// directive above. Use this to open the FunctionFS endpoint ep0. When using this option, the activated service has to have
 	// the USBFunctionDescriptors= and USBFunctionStrings= options set.
 	ListenUSBFunction systemdconf.Value
 
-	// Takes one of udplite or sctp. Specifies a socket protocol (IPPROTO_UDPLITE) UDP-Lite (IPPROTO_SCTP) SCTP socket respectively.
+	// Takes one of udplite or sctp. The socket will use the UDP-Lite (IPPROTO_UDPLITE) or SCTP (IPPROTO_SCTP) protocol, respectively.
 	SocketProtocol systemdconf.Value
 
 	// Takes one of default, both or ipv6-only. Controls the IPV6_V6ONLY socket option (see ipv6 for details). If both, IPv6 sockets
@@ -165,8 +179,8 @@ type SocketSection struct {
 
 	// Specifies a network interface name to bind this socket to. If set, traffic will only be accepted from the specified network
 	// interfaces. This controls the SO_BINDTODEVICE socket option (see socket for details). If this option is used, an implicit
-	// dependency from this socket unit on the network interface device unit (systemd.device is created. Note that setting this
-	// parameter might result in additional dependencies to be added to the unit (see above).
+	// dependency from this socket unit on the network interface device unit is created (see systemd.device). Note that setting
+	// this parameter might result in additional dependencies to be added to the unit (see above).
 	BindToDevice systemdconf.Value
 
 	// Takes a UNIX user/group name. When specified, all AF_UNIX sockets and FIFO nodes in the file system are owned by the specified
@@ -189,13 +203,13 @@ type SocketSection struct {
 	// the file system access mode used when creating these directories. Takes an access mode in octal notation. Defaults to 0755.
 	DirectoryMode systemdconf.Value
 
-	// Takes a boolean argument. If true, a service instance is spawned for each incoming connection and only the connection socket
-	// is passed to it. If false, all listening sockets themselves are passed to the started service unit, and only one service
-	// unit is spawned for all connections (also see above). This value is ignored for datagram sockets and FIFOs where a single
-	// service unit unconditionally handles all incoming traffic. Defaults to false. For performance reasons, it is recommended
-	// to write new daemons only in a way that is suitable for Accept=no. A daemon listening on an AF_UNIX socket may, but does not
-	// need to, call close on the received socket before exiting. However, it must not unlink the socket from a file system. It should
-	// not invoke shutdown on sockets it got with Accept=no, but it may do so for sockets it got with Accept=yes set. Setting Accept=yes
+	// Takes a boolean argument. If yes, a service instance is spawned for each incoming connection and only the connection socket
+	// is passed to it. If no, all listening sockets themselves are passed to the started service unit, and only one service unit
+	// is spawned for all connections (also see above). This value is ignored for datagram sockets and FIFOs where a single service
+	// unit unconditionally handles all incoming traffic. Defaults to no. For performance reasons, it is recommended to write
+	// new daemons only in a way that is suitable for Accept=no. A daemon listening on an AF_UNIX socket may, but does not need to,
+	// call close on the received socket before exiting. However, it must not unlink the socket from a file system. It should not
+	// invoke shutdown on sockets it got with Accept=no, but it may do so for sockets it got with Accept=yes set. Setting Accept=yes
 	// is mostly useful to allow daemons designed for usage with inetd to work unmodified with systemd socket activation.
 	//
 	// For IPv4 and IPv6 connections, the REMOTE_ADDR environment variable will contain the remote IP address, and REMOTE_PORT
@@ -205,6 +219,12 @@ type SocketSection struct {
 	// Takes a boolean argument. May only be used in conjunction with ListenSpecial=. If true, the specified special file is opened
 	// in read-write mode, if false, in read-only mode. Defaults to false.
 	Writable systemdconf.Value
+
+	// Takes a boolean argument. May only be used when Accept=no. If yes, the socket's buffers are cleared after the triggered
+	// service exited. This causes any pending data to be flushed and any pending incoming connections to be rejected. If no, the
+	// socket's buffers won't be cleared, permitting the service to handle any pending connections after restart, which is the
+	// usually expected behaviour. Defaults to no.
+	FlushPending systemdconf.Value
 
 	// The maximum number of connections to simultaneously run services instances for, when Accept=yes is set. If more concurrent
 	// connections are coming in, they will be refused until at least one existing connection is terminated. This setting has
@@ -236,7 +256,7 @@ type SocketSection struct {
 	KeepAliveProbes systemdconf.Value
 
 	// Takes a boolean argument. TCP Nagle's algorithm works by combining a number of small outgoing messages, and sending them
-	// all at once. This controls the TCP_NODELAY socket option (see tcp Defaults to false.
+	// all at once. This controls the TCP_NODELAY socket option (see tcp). Defaults to false.
 	NoDelay systemdconf.Value
 
 	// Takes an integer argument controlling the priority for all traffic sent from this socket. This controls the SO_PRIORITY
@@ -302,7 +322,7 @@ type SocketSection struct {
 	// from the information handed by the peer over the network. Note that only the security level is used from the information
 	// provided by the peer. Other parts of the resulting SELinux context originate from either the target binary that is effectively
 	// triggered by socket unit or from the value of the SELinuxContext= option. This configuration option only affects sockets
-	// with Accept= mode set to "true". Also note that this option is useful only when MLS/MCS SELinux policy is deployed. Defaults
+	// with Accept= mode set to "yes". Also note that this option is useful only when MLS/MCS SELinux policy is deployed. Defaults
 	// to "false".
 	SELinuxContextFromNet systemdconf.Value
 
@@ -320,11 +340,11 @@ type SocketSection struct {
 
 	// Takes a boolean value. Controls whether the socket can be bound to non-local IP addresses. This is useful to configure sockets
 	// listening on specific IP addresses before those IP addresses are successfully configured on a network interface. This
-	// sets the IP_FREEBIND socket option. For robustness reasons it is recommended to use this option whenever you bind a socket
-	// to a specific IP address. Defaults to false.
+	// sets the IP_FREEBIND/IPV6_FREEBIND socket option. For robustness reasons it is recommended to use this option whenever
+	// you bind a socket to a specific IP address. Defaults to false.
 	FreeBind systemdconf.Value
 
-	// Takes a boolean value. Controls the IP_TRANSPARENT socket option. Defaults to false.
+	// Takes a boolean value. Controls the IP_TRANSPARENT/IPV6_TRANSPARENT socket option. Defaults to false.
 	Transparent systemdconf.Value
 
 	// Takes a boolean value. This controls the SO_BROADCAST socket option, which allows broadcast datagrams to be sent from
@@ -338,6 +358,15 @@ type SocketSection struct {
 	// Takes a boolean value. This controls the SO_PASSSEC socket option, which allows AF_UNIX sockets to receive the security
 	// context of the sending process in an ancillary message. Defaults to false.
 	PassSecurity systemdconf.Value
+
+	// Takes a boolean value. This controls the IP_PKTINFO, IPV6_RECVPKTINFO, NETLINK_PKTINFO or PACKET_AUXDATA socket options,
+	// which enable reception of additional per-packet metadata as ancillary message, on AF_INET, AF_INET6, AF_UNIX and AF_PACKET
+	// sockets. Defaults to false.
+	PassPacketInfo systemdconf.Value
+
+	// Takes one of "off", "us" (alias: "usec", "µs") or "ns" (alias: "nsec"). This controls the SO_TIMESTAMP or SO_TIMESTAMPNS
+	// socket options, and enables whether ingress network traffic shall carry timestamping metadata. Defaults to off.
+	Timestamping systemdconf.Value
 
 	// Takes a string value. Controls the TCP congestion algorithm used by this socket. Should be one of "westwood", "veno", "cubic",
 	// "lp" or any other available algorithm supported by the IP stack. This setting applies only to stream sockets.
@@ -412,13 +441,4 @@ type SocketSection struct {
 	// disable any form of trigger rate limiting. If the limit is hit, the socket unit is placed into a failure mode, and will not
 	// be connectible anymore until restarted. Note that this limit is enforced before the service activation is enqueued.
 	TriggerLimitBurst systemdconf.Value
-}
-
-// SocketFile represents information about an IPC or network socket or a file system FIFO controlled and supervised by systemd, for socket-based activation
-type SocketFile struct {
-	systemdconf.File
-
-	Unit    UnitSection    // Generic information about the unit that is not dependent on the type of unit
-	Socket  SocketSection  // Information about the socket or FIFO it supervises
-	Install InstallSection // Installation information for the unit
 }

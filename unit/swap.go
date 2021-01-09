@@ -1,10 +1,21 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package unit
 
 import "github.com/sergeymakinen/go-systemdconf"
 
+// SwapFile represents systemd.swap — Swap unit configuration
+// (see https://www.freedesktop.org/software/systemd/man/systemd.swap.html for details)
+type SwapFile struct {
+	systemdconf.File
+
+	Unit    UnitSection    // Generic information about the unit that is not dependent on the type of unit
+	Swap    SwapSection    // Information about the swap device it supervises
+	Install InstallSection // Installation information for the unit
+}
+
 // SwapSection represents information about the swap device it supervises
+// (see https://www.freedesktop.org/software/systemd/man/systemd.swap.html#Options for details)
 type SwapSection struct {
 	systemdconf.Section
 	ExecOptions
@@ -33,13 +44,4 @@ type SwapSection struct {
 	// a time span value such as "5min 20s". Pass "0" to disable the timeout logic. Defaults to DefaultTimeoutStartSec= from the
 	// manager configuration file (see systemd-system.conf).
 	TimeoutSec systemdconf.Value
-}
-
-// SwapFile represents information about a swap device or file for memory paging controlled and supervised by systemd
-type SwapFile struct {
-	systemdconf.File
-
-	Unit    UnitSection    // Generic information about the unit that is not dependent on the type of unit
-	Swap    SwapSection    // Information about the swap device it supervises
-	Install InstallSection // Installation information for the unit
 }

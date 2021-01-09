@@ -1,10 +1,21 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
-package network
+package nspawn
 
 import "github.com/sergeymakinen/go-systemdconf"
 
+// NspawnFile represents systemd.nspawn — Container settings
+// (see https://www.freedesktop.org/software/systemd/man/systemd.nspawn.html for details)
+type NspawnFile struct {
+	systemdconf.File
+
+	Exec    NspawnExecSection    // Execution parameters
+	Files   NspawnFilesSection   // Parameters configuring the file system of the container
+	Network NspawnNetworkSection // Parameters configuring the network connectivity of the container
+}
+
 // NspawnExecSection represents execution parameters
+// (see https://www.freedesktop.org/software/systemd/man/systemd.nspawn.html#%5BExec%5D%20Section%20Options for details)
 type NspawnExecSection struct {
 	systemdconf.Section
 
@@ -57,6 +68,8 @@ type NspawnExecSection struct {
 	// line switches. Note that Capability= is a privileged setting, and only takes effect in .nspawn files in /etc/systemd/nspawn/
 	// and /run/system/nspawn/ (see above). On the other hand, DropCapability= takes effect in all cases. If the special value
 	// "all" is passed, all capabilities are retained (or dropped).
+	//
+	// These settings change the bounding set of capabilities which also limits the ambient capabilities as given with the AmbientCapability=.
 	Capability systemdconf.Value
 
 	// Takes a space-separated list of Linux process capabilities (see capabilities for details). The Capability= setting
@@ -65,7 +78,22 @@ type NspawnExecSection struct {
 	// line switches. Note that Capability= is a privileged setting, and only takes effect in .nspawn files in /etc/systemd/nspawn/
 	// and /run/system/nspawn/ (see above). On the other hand, DropCapability= takes effect in all cases. If the special value
 	// "all" is passed, all capabilities are retained (or dropped).
+	//
+	// These settings change the bounding set of capabilities which also limits the ambient capabilities as given with the AmbientCapability=.
 	DropCapability systemdconf.Value
+
+	// Takes a space-separated list of Linux process capabilities (see capabilities for details). The AmbientCapability=
+	// setting specifies capability which will be passed to to started program in the inheritable and ambient capability sets.
+	// This will grant these capabilities to this process. This setting correspond to the --ambient-capability= command line
+	// switch.
+	//
+	// The value "all" is not supported for this setting.
+	//
+	// The setting of AmbientCapability= must be covered by the bounding set settings which were established by Capability=
+	// and DropCapability=.
+	//
+	// Note that AmbientCapability= is a privileged setting (see above).
+	AmbientCapability systemdconf.Value
 
 	// Takes a boolean argument that controls the PR_SET_NO_NEW_PRIVS flag for the container payload. This is equivalent to
 	// the --no-new-privileges= command line switch. See systemd-nspawn for details.
@@ -186,6 +214,7 @@ type NspawnExecSection struct {
 }
 
 // NspawnFilesSection represents parameters configuring the file system of the container
+// (see https://www.freedesktop.org/software/systemd/man/systemd.nspawn.html#%5BFiles%5D%20Section%20Options for details)
 type NspawnFilesSection struct {
 	systemdconf.Section
 
@@ -215,8 +244,8 @@ type NspawnFilesSection struct {
 	// see systemd-nspawn for details about the specific options supported. This setting is privileged (see above).
 	TemporaryFileSystem systemdconf.Value
 
-	// Masks the specified file or directly in the container, by over-mounting it with an empty file node of the same type with the
-	// most restrictive access mode. Takes a file system path as argument. This option may be used multiple times to mask multiple
+	// Masks the specified file or directory in the container, by over-mounting it with an empty file node of the same type with
+	// the most restrictive access mode. Takes a file system path as argument. This option may be used multiple times to mask multiple
 	// files or directories. This option is equivalent to the command line switch --inaccessible=, see systemd-nspawn for details
 	// about the specific options supported. This setting is privileged (see above).
 	Inaccessible systemdconf.Value
@@ -238,6 +267,7 @@ type NspawnFilesSection struct {
 }
 
 // NspawnNetworkSection represents parameters configuring the network connectivity of the container
+// (see https://www.freedesktop.org/software/systemd/man/systemd.nspawn.html#%5BNetwork%5D%20Section%20Options for details)
 type NspawnNetworkSection struct {
 	systemdconf.Section
 
@@ -255,7 +285,8 @@ type NspawnNetworkSection struct {
 	// host and the container. The first specified name is the interface name on the host, the second the interface name in the container.
 	// The latter may be omitted in which case it is set to the same name as the host side interface. This setting implies Private=yes.
 	// This setting corresponds to the --network-veth-extra= command line switch, and maybe be used multiple times. It is independent
-	// of VirtualEthernet=. This option is privileged (see above).
+	// of VirtualEthernet=. Note that this option is unrelated to the Bridge= setting below, and thus any connections created
+	// this way are not automatically added to any bridge device on the host side. This option is privileged (see above).
 	VirtualEthernetExtra systemdconf.Value
 
 	// Takes a space-separated list of interfaces to add to the container. This option corresponds to the --network-interface=
@@ -286,13 +317,4 @@ type NspawnNetworkSection struct {
 	// Exposes a TCP or UDP port of the container on the host. This option corresponds to the --port= command line switch, see systemd-nspawn
 	// for the precise syntax of the argument this option takes. This option is privileged (see above).
 	Port systemdconf.Value
-}
-
-// NspawnFile represents runtime configuration for a local container, and is used used by systemd-nspawn
-type NspawnFile struct {
-	systemdconf.File
-
-	Exec    NspawnExecSection    // Execution parameters
-	Files   NspawnFilesSection   // Parameters configuring the file system of the container
-	Network NspawnNetworkSection // Parameters configuring the network connectivity of the container
 }

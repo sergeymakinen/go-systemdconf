@@ -1,10 +1,21 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package unit
 
 import "github.com/sergeymakinen/go-systemdconf"
 
+// AutomountFile represents systemd.automount — Automount unit configuration
+// (see https://www.freedesktop.org/software/systemd/man/systemd.automount.html for details)
+type AutomountFile struct {
+	systemdconf.File
+
+	Unit      UnitSection      // Generic information about the unit that is not dependent on the type of unit
+	Automount AutomountSection // Information about the file system automount points it supervises
+	Install   InstallSection   // Installation information for the unit
+}
+
 // AutomountSection represents information about the file system automount points it supervises
+// (see https://www.freedesktop.org/software/systemd/man/systemd.automount.html#Options for details)
 type AutomountSection struct {
 	systemdconf.Section
 
@@ -20,13 +31,4 @@ type AutomountSection struct {
 	// a unit-less value in seconds, or a time span value such as "5min 20s". Pass 0 to disable the timeout logic. The timeout is disabled
 	// by default.
 	TimeoutIdleSec systemdconf.Value
-}
-
-// AutomountFile represents information about a file system automount point controlled and supervised by systemd
-type AutomountFile struct {
-	systemdconf.File
-
-	Unit      UnitSection      // Generic information about the unit that is not dependent on the type of unit
-	Automount AutomountSection // Information about the file system automount points it supervises
-	Install   InstallSection   // Installation information for the unit
 }

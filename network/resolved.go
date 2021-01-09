@@ -1,36 +1,55 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package network
 
 import "github.com/sergeymakinen/go-systemdconf"
 
-// ResolvedResolveSection represents local DNS and LLMNR name resolution parameters
+// ResolvedFile represents resolved.conf, resolved.conf.d — Network Name Resolution configuration files
+// (see https://www.freedesktop.org/software/systemd/man/resolved.conf.html for details)
+type ResolvedFile struct {
+	systemdconf.File
+
+	Resolve ResolvedResolveSection // [Resolve] section
+}
+
+// ResolvedResolveSection represents [Resolve] section
+// (see https://www.freedesktop.org/software/systemd/man/resolved.conf.html#Options for details)
 type ResolvedResolveSection struct {
 	systemdconf.Section
 
-	// A space-separated list of IPv4 and IPv6 addresses to use as system DNS servers. DNS requests are sent to one of the listed
-	// DNS servers in parallel to suitable per-link DNS servers acquired from systemd-networkd.service or set at runtime by
-	// external applications. For compatibility reasons, if this setting is not specified, the DNS servers listed in /etc/resolv.conf
-	// are used instead, if that file exists and any servers are configured in it. This setting defaults to the empty list.
+	// A space-separated list of IPv4 and IPv6 addresses to use as system DNS servers. Each address can optionally take a port number
+	// separated with ":", a network interface name or index separated with "%", and a Server Name Indication (SNI) separated
+	// with "#". When IPv6 address is specified with a port number, then the address must be in the square brackets. That is, the
+	// acceptable full formats are "111.222.333.444:9953%ifname#example.com" for IPv4 and "[1111:2222::3333]:9953%ifname#example.com"
+	// for IPv6. DNS requests are sent to one of the listed DNS servers in parallel to suitable per-link DNS servers acquired from
+	// systemd-networkd.service or set at runtime by external applications. For compatibility reasons, if this setting is
+	// not specified, the DNS servers listed in /etc/resolv.conf are used instead, if that file exists and any servers are configured
+	// in it. This setting defaults to the empty list.
 	DNS systemdconf.Value
 
-	// A space-separated list of IPv4 and IPv6 addresses to use as the fallback DNS servers. Any per-link DNS servers obtained
-	// from systemd-networkd.service take precedence over this setting, as do any servers set via DNS= above or /etc/resolv.conf.
-	// This setting is hence only used if no other DNS server information is known. If this option is not given, a compiled-in list
-	// of DNS servers is used instead.
+	// A space-separated list of IPv4 and IPv6 addresses to use as the fallback DNS servers. Please see DNS= for acceptable format
+	// of addresses. Any per-link DNS servers obtained from systemd-networkd.service take precedence over this setting, as
+	// do any servers set via DNS= above or /etc/resolv.conf. This setting is hence only used if no other DNS server information
+	// is known. If this option is not given, a compiled-in list of DNS servers is used instead.
 	FallbackDNS systemdconf.Value
 
-	// A space-separated list of domains. These domains are used as search suffixes when resolving single-label host names (domain
-	// names which contain no dot), in order to qualify them into fully-qualified domain names (FQDNs). Search domains are strictly
-	// processed in the order they are specified, until the name with the suffix appended is found. For compatibility reasons,
-	// if this setting is not specified, the search domains listed in /etc/resolv.conf are used instead, if that file exists and
-	// any domains are configured in it. This setting defaults to the empty list.
+	// A space-separated list of domains optionally prefixed with "~", used for two distinct purposes described below. Defaults
+	// to the empty list.
 	//
-	// Specified domain names may optionally be prefixed with "~". In this case they do not define a search path, but preferably
-	// direct DNS queries for the indicated domains to the DNS servers configured with the system DNS= setting (see above), in
-	// case additional, suitable per-link DNS servers are known. If no per-link DNS servers are known using the "~" syntax has
-	// no effect. Use the construct "~." (which is composed of "~" to indicate a routing domain and "." to indicate the DNS root domain
-	// that is the implied suffix of all DNS domains) to use the system DNS server defined with DNS= preferably for all domains.
+	// Any domains not prefixed with "~" are used as search suffixes when resolving single-label hostnames (domain names which
+	// contain no dot), in order to qualify them into fully-qualified domain names (FQDNs). These "search domains" are strictly
+	// processed in the order they are specified in, until the name with the suffix appended is found. For compatibility reasons,
+	// if this setting is not specified, the search domains listed in /etc/resolv.conf with the search keyword are used instead,
+	// if that file exists and any domains are configured in it.
+	//
+	// The domains prefixed with "~" are called "routing domains". All domains listed here (both search domains and routing domains
+	// after removing the "~" prefix) define a search path that preferably directs DNS queries to this interface. This search
+	// path has an effect only when suitable per-link DNS servers are known. Such servers may be defined through the DNS= setting
+	// (see above) and dynamically at run time, for example from DHCP leases. If no per-link DNS servers are known, routing domains
+	// have no effect.
+	//
+	// Use the construct "~." (which is composed from "~" to indicate a routing domain and "." to indicate the DNS root domain that
+	// is the implied suffix of all DNS domains) to use the DNS servers defined for this link preferably for all domains.
 	Domains systemdconf.Value
 
 	// Takes a boolean argument or "resolve". Controls Link-Local Multicast Name Resolution support (RFC 4795) on the local
@@ -80,15 +99,19 @@ type ResolvedResolveSection struct {
 	// it is attempted to detect site-private DNS zones using top-level domains (TLDs) that are not known by the DNS root server.
 	// This logic does not work in all private zone setups.
 	//
-	// Defaults to "allow-downgrade"
+	// Defaults to "allow-downgrade".
 	DNSSEC systemdconf.Value
 
 	// Takes a boolean argument or "opportunistic". If true all connections to the server will be encrypted. Note that this mode
-	// requires a DNS server that supports DNS-over-TLS and has a valid certificate for it's IP. If the DNS server does not support
-	// DNS-over-TLS all DNS requests will fail. When set to "opportunistic" DNS request are attempted to send encrypted with
-	// DNS-over-TLS. If the DNS server does not support TLS, DNS-over-TLS is disabled. Note that this mode makes DNS-over-TLS
-	// vulnerable to "downgrade" attacks, where an attacker might be able to trigger a downgrade to non-encrypted mode by synthesizing
-	// a response that suggests DNS-over-TLS was not supported. If set to false, DNS lookups are send over UDP.
+	// requires a DNS server that supports DNS-over-TLS and has a valid certificate. If the hostname was specified in DNS= by using
+	// the format format "address#server_name" it is used to validate its certificate and also to enable Server Name Indication
+	// (SNI) when opening a TLS connection. Otherwise the certificate is checked against the server's IP. If the DNS server does
+	// not support DNS-over-TLS all DNS requests will fail.
+	//
+	// When set to "opportunistic" DNS request are attempted to send encrypted with DNS-over-TLS. If the DNS server does not support
+	// TLS, DNS-over-TLS is disabled. Note that this mode makes DNS-over-TLS vulnerable to "downgrade" attacks, where an attacker
+	// might be able to trigger a downgrade to non-encrypted mode by synthesizing a response that suggests DNS-over-TLS was not
+	// supported. If set to false, DNS lookups are send over UDP.
 	//
 	// Note that DNS-over-TLS requires additional data to be send for setting up an encrypted connection, and thus results in
 	// a small DNS look-up time penalty.
@@ -96,8 +119,8 @@ type ResolvedResolveSection struct {
 	// Note that in "opportunistic" mode the resolver is not capable of authenticating the server, so it is vulnerable to "man-in-the-middle"
 	// attacks.
 	//
-	// In addition to this global DNSOverTLS setting systemd-networkd.service also maintains per-link DNSOverTLS settings.
-	// For system DNS servers (see above), only the global DNSOverTLS setting is in effect. For per-link DNS servers the per-link
+	// In addition to this global DNSOverTLS= setting systemd-networkd.service also maintains per-link DNSOverTLS= settings.
+	// For system DNS servers (see above), only the global DNSOverTLS= setting is in effect. For per-link DNS servers the per-link
 	// setting is in effect, unless it is unset in which case the global setting is used instead.
 	//
 	// Defaults to off.
@@ -105,11 +128,15 @@ type ResolvedResolveSection struct {
 
 	// Takes a boolean or "no-negative" as argument. If "yes" (the default), resolving a domain name which already got queried
 	// earlier will return the previous result as long as it is still valid, and thus does not result in a new network request. Be
-	// aware that turning off caching comes at a performance penalty, which is particularly high when DNSSEC is used.
+	// aware that turning off caching comes at a performance penalty, which is particularly high when DNSSEC is used. If "no-negative",
+	// only positive answers are cached.
 	//
-	// If "no-negative", only positive answers are cached. Note that caching is turned off implicitly if the configured DNS server
-	// is on a host-local IP address (such as 127.0.0.1 or ::1), in order to avoid duplicate local caching.
+	// Note that caching is turned off by default for host-local DNS servers. See CacheFromLocalhost= for details.
 	Cache systemdconf.Value
+
+	// Takes a boolean as argument. If "no" (the default), and response cames from host-local IP address (such as 127.0.0.1 or
+	// ::1), the result wouldn't be cached in order to avoid potential duplicate local caching.
+	CacheFromLocalhost systemdconf.Value
 
 	// Takes a boolean argument or one of "udp" and "tcp". If "udp", a DNS stub resolver will listen for UDP requests on address 127.0.0.53
 	// port 53. If "tcp", the stub will listen for TCP requests on the same address and port. If "yes" (the default), the stub listens
@@ -118,14 +145,31 @@ type ResolvedResolveSection struct {
 	// Note that the DNS stub listener is turned off implicitly when its listening address and port are already in use.
 	DNSStubListener systemdconf.Value
 
-	// Takes a boolean argument. If "yes" (the default), the DNS stub resolver will read /etc/hosts, and try to resolve hosts or
-	// address by using the entries in the file before sending query to DNS servers.
+	// Takes an IPv4 or IPv6 address to listen on. The address may be optionally prefixed with a protocol name ("udp" or "tcp") separated
+	// with ":". If the protocol is not specified, the service will listen on both UDP and TCP. It may be also optionally suffixed
+	// by a numeric port number with separator ":". When an IPv6 address is specified with a port number, then the address must be
+	// in the square brackets. If the port is not specified, then the service uses port 53. Note that this is independent of the primary
+	// DNS stub configured with DNSStubListener=, and only configures additional sockets to listen on. This option can be specified
+	// multiple times. If an empty string is assigned, then the all previous assignments are cleared. Defaults to unset.
+	//
+	// Examples:
+	//
+	// 	DNSStubListenerExtra=192.168.10.10 DNSStubListenerExtra=2001:db8:0:f102::10 DNSStubListenerExtra=192.168.10.11:9953
+	// 	DNSStubListenerExtra=[2001:db8:0:f102::11]:9953 DNSStubListenerExtra=tcp:192.168.10.12 DNSStubListenerExtra=udp:2001:db8:0:f102::12
+	// 	DNSStubListenerExtra=tcp:192.168.10.13:9953 DNSStubListenerExtra=udp:[2001:db8:0:f102::13]:9953
+	DNSStubListenerExtra systemdconf.Value
+
+	// Takes a boolean argument. If "yes" (the default), systemd-resolved will read /etc/hosts, and try to resolve hosts or address
+	// by using the entries in the file before sending query to DNS servers.
 	ReadEtcHosts systemdconf.Value
-}
 
-// ResolvedFile represents local DNS and LLMNR name resolution parameters
-type ResolvedFile struct {
-	systemdconf.File
-
-	Resolve ResolvedResolveSection // Local DNS and LLMNR name resolution parameters
+	// Takes a boolean argument. When false (the default), systemd-resolved will not resolve A and AAAA queries for single-label
+	// names over classic DNS. Note that such names may still be resolved if search domains are specified (see Domains= above),
+	// or using other mechanisms, in particular via LLMNR or from /etc/hosts. When true, queries for single-label names will
+	// be forwarded to global DNS servers even if no search domains are defined.
+	//
+	// This option is provided for compatibility with configurations where public DNS servers are not used. Forwarding single-label
+	// names to servers not under your control is not standard-conformant, see IAB Statement, and may create a privacy and security
+	// risk.
+	ResolveUnicastSingleLabel systemdconf.Value
 }

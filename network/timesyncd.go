@@ -1,10 +1,19 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package network
 
 import "github.com/sergeymakinen/go-systemdconf"
 
-// TimesyncdResolveSection represents NTP network time synchronization parameters
+// TimesyncdFile represents timesyncd.conf, timesyncd.conf.d — Network Time Synchronization configuration files
+// (see https://www.freedesktop.org/software/systemd/man/timesyncd.conf.html for details)
+type TimesyncdFile struct {
+	systemdconf.File
+
+	Resolve TimesyncdResolveSection // [Resolve] section
+}
+
+// TimesyncdResolveSection represents [Resolve] section
+// (see https://www.freedesktop.org/software/systemd/man/timesyncd.conf.html#Options for details)
 type TimesyncdResolveSection struct {
 	systemdconf.Section
 
@@ -33,11 +42,8 @@ type TimesyncdResolveSection struct {
 	// must not be smaller than 16 seconds. PollIntervalMaxSec= must be larger than PollIntervalMinSec=. PollIntervalMinSec=
 	// defaults to 32 seconds, and PollIntervalMaxSec= defaults to 2048 seconds.
 	PollIntervalMaxSec systemdconf.Value
-}
 
-// TimesyncdFile represents NTP network time synchronization parameters
-type TimesyncdFile struct {
-	systemdconf.File
-
-	Resolve TimesyncdResolveSection // NTP network time synchronization parameters
+	// Specifies the delaying attempts to contact servers after network is online. Takes a time value (in seconds). Defaults
+	// to 30 seconds and must not be smaller than 1 seconds.
+	ConnectionRetrySec systemdconf.Value
 }

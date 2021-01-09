@@ -1,10 +1,11 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package unit
 
 import "github.com/sergeymakinen/go-systemdconf"
 
 // UnitSection represents generic information about the unit that is not dependent on the type of unit
+// (see https://www.freedesktop.org/software/systemd/man/systemd.unit.html#%5BUnit%5D%20Section%20Options for details)
 type UnitSection struct {
 	systemdconf.Section
 
@@ -24,14 +25,14 @@ type UnitSection struct {
 	// to this option, the list is reset and all prior assignments will have no effect.
 	Documentation systemdconf.Value
 
-	// Configures requirement dependencies on other units. This option may be specified more than once or multiple space-separated
+	// Configures (weak) requirement dependencies on other units. This option may be specified more than once or multiple space-separated
 	// units may be specified in one option in which case dependencies for all listed names will be created. Dependencies of this
 	// type may also be configured outside of the unit configuration file by adding a symlink to a .wants/ directory accompanying
 	// the unit file. For details, see above.
 	//
 	// Units listed in this option will be started if the configuring unit is. However, if the listed units fail to start or cannot
 	// be added to the transaction, this has no impact on the validity of the transaction as a whole, and this unit will still be started.
-	// This is the recommended way to hook start-up of one unit to the start-up of another unit.
+	// This is the recommended way to hook the start-up of one unit to the start-up of another unit.
 	//
 	// Note that requirement dependencies do not influence the order in which services are started or stopped. This has to be configured
 	// independently with the After= or Before= options. If unit foo.service pulls in unit bar.service as configured with Wants=
@@ -39,8 +40,8 @@ type UnitSection struct {
 	// between them if foo.service is activated.
 	Wants systemdconf.Value
 
-	// Similar to Wants=, but declares a stronger dependency. Dependencies of this type may also be configured by adding a symlink
-	// to a .requires/ directory accompanying the unit file.
+	// Similar to Wants=, but declares a stronger requirement dependency. Dependencies of this type may also be configured by
+	// adding a symlink to a .requires/ directory accompanying the unit file.
 	//
 	// If this unit gets activated, the units listed will be activated as well. If one of the other units fails to activate, and an
 	// ordering dependency After= on the failing unit is set, this unit will not be started. Besides, with or without specifying
@@ -108,12 +109,12 @@ type UnitSection struct {
 	// These two settings expect a space-separated list of unit names. They may be specified more than once, in which case dependencies
 	// for all listed names are created.
 	//
-	// Those two setttings configure ordering dependencies between units. If unit foo.service contains the setting Before=bar.service
+	// Those two settings configure ordering dependencies between units. If unit foo.service contains the setting Before=bar.service
 	// and both units are being started, bar.service's start-up is delayed until foo.service has finished starting up. After=
 	// is the inverse of Before=, i.e. while Before= ensures that the configured unit is started before the listed unit begins
 	// starting up, After= ensures the opposite, that the listed unit is fully started up before the configured unit is started.
 	//
-	// When two units with an ordering dependency between them are shut down, the inverse of the start-up order is applied. i.e.
+	// When two units with an ordering dependency between them are shut down, the inverse of the start-up order is applied. I.e.
 	// if a unit is configured with After= on another unit, the former is stopped before the latter if both are shut down. Given two
 	// units with any ordering dependency between them, if one unit is shut down and the other is started up, the shutdown is ordered
 	// before the start-up. It doesn't matter if the ordering dependency is After= or Before=, in this case. It also doesn't matter
@@ -121,22 +122,26 @@ type UnitSection struct {
 	// in all cases. If two units have no ordering dependencies between them, they are shut down or started up simultaneously,
 	// and no ordering takes place. It depends on the unit type when precisely a unit has finished starting up. Most importantly,
 	// for service units start-up is considered completed for the purpose of Before=/After= when all its configured start-up
-	// commands have been invoked and they either failed or reported start-up success.
+	// commands have been invoked and they either failed or reported start-up success. Note that this does includes ExecStartPost=
+	// (or ExecStopPost= for the shutdown case).
 	//
 	// Note that those settings are independent of and orthogonal to the requirement dependencies as configured by Requires=,
 	// Wants=, Requisite=, or BindsTo=. It is a common pattern to include a unit name in both the After= and Wants= options, in which
 	// case the unit listed will be started before the unit that is configured with these options.
+	//
+	// Note that Before= dependencies on device units have no effect and are not supported. Devices generally become available
+	// as a result of an external hotplug event, and systemd creates the corresponding device unit without delay.
 	Before systemdconf.Value
 
 	// These two settings expect a space-separated list of unit names. They may be specified more than once, in which case dependencies
 	// for all listed names are created.
 	//
-	// Those two setttings configure ordering dependencies between units. If unit foo.service contains the setting Before=bar.service
+	// Those two settings configure ordering dependencies between units. If unit foo.service contains the setting Before=bar.service
 	// and both units are being started, bar.service's start-up is delayed until foo.service has finished starting up. After=
 	// is the inverse of Before=, i.e. while Before= ensures that the configured unit is started before the listed unit begins
 	// starting up, After= ensures the opposite, that the listed unit is fully started up before the configured unit is started.
 	//
-	// When two units with an ordering dependency between them are shut down, the inverse of the start-up order is applied. i.e.
+	// When two units with an ordering dependency between them are shut down, the inverse of the start-up order is applied. I.e.
 	// if a unit is configured with After= on another unit, the former is stopped before the latter if both are shut down. Given two
 	// units with any ordering dependency between them, if one unit is shut down and the other is started up, the shutdown is ordered
 	// before the start-up. It doesn't matter if the ordering dependency is After= or Before=, in this case. It also doesn't matter
@@ -144,11 +149,15 @@ type UnitSection struct {
 	// in all cases. If two units have no ordering dependencies between them, they are shut down or started up simultaneously,
 	// and no ordering takes place. It depends on the unit type when precisely a unit has finished starting up. Most importantly,
 	// for service units start-up is considered completed for the purpose of Before=/After= when all its configured start-up
-	// commands have been invoked and they either failed or reported start-up success.
+	// commands have been invoked and they either failed or reported start-up success. Note that this does includes ExecStartPost=
+	// (or ExecStopPost= for the shutdown case).
 	//
 	// Note that those settings are independent of and orthogonal to the requirement dependencies as configured by Requires=,
 	// Wants=, Requisite=, or BindsTo=. It is a common pattern to include a unit name in both the After= and Wants= options, in which
 	// case the unit listed will be started before the unit that is configured with these options.
+	//
+	// Note that Before= dependencies on device units have no effect and are not supported. Devices generally become available
+	// as a result of an external hotplug event, and systemd creates the corresponding device unit without delay.
 	After systemdconf.Value
 
 	// A space-separated list of one or more units that are activated when this unit enters the "failed" state. A service unit using
@@ -168,7 +177,7 @@ type UnitSection struct {
 	// For units that start processes (such as service units), lists one or more other units whose network and/or temporary file
 	// namespace to join. This only applies to unit types which support the PrivateNetwork=, NetworkNamespacePath= and PrivateTmp=
 	// directives (see systemd.exec for details). If a unit that has this setting set is started, its processes will see the same
-	// /tmp, /var/tmp and network namespace as one listed unit that is started. If multiple listed units are already started,
+	// /tmp/, /var/tmp/ and network namespace as one listed unit that is started. If multiple listed units are already started,
 	// it is not defined which namespace is joined. Note that this setting only has an effect if PrivateNetwork=/NetworkNamespacePath=
 	// and/or PrivateTmp= is enabled for both the unit that joins the namespace and the unit whose namespace is joined.
 	JoinsNamespaceOf systemdconf.Value
@@ -182,11 +191,11 @@ type UnitSection struct {
 
 	// Takes a value of "fail", "replace", "replace-irreversibly", "isolate", "flush", "ignore-dependencies" or "ignore-requirements".
 	// Defaults to "replace". Specifies how the units listed in OnFailure= will be enqueued. See systemctl's --job-mode= option
-	// for details on the possible values. If this is set to "isolate", only a single unit may be listed in OnFailure=..
+	// for details on the possible values. If this is set to "isolate", only a single unit may be listed in OnFailure=.
 	OnFailureJobMode systemdconf.Value
 
 	// Takes a boolean argument. If true, this unit will not be stopped when isolating another unit. Defaults to false for service,
-	// target, socket, busname, timer, and path units, and true for slice, scope, device, swap, mount, and automount units.
+	// target, socket, timer, and path units, and true for slice, scope, device, swap, mount, and automount units.
 	IgnoreOnIsolate systemdconf.Value
 
 	// Takes a boolean argument. If true, this unit will be stopped when it is no longer used. Note that, in order to minimize the
@@ -341,8 +350,8 @@ type UnitSection struct {
 	StartLimitBurst systemdconf.Value
 
 	// Configure an additional action to take if the rate limit configured with StartLimitIntervalSec= and StartLimitBurst=
-	// is hit. Takes the same values as the setting FailureAction=/SuccessAction= settings and executes the same actions. If
-	// none is set, hitting the rate limit will trigger no action besides that the start will not be permitted. Defaults to none.
+	// is hit. Takes the same values as the FailureAction=/SuccessAction= settings. If none is set, hitting the rate limit will
+	// trigger no action except that the start will not be permitted. Defaults to none.
 	StartLimitAction systemdconf.Value
 
 	// Configure the optional argument for the reboot system call if StartLimitAction= or FailureAction= is a reboot action.
@@ -366,10 +375,11 @@ type UnitSection struct {
 	// Check whether the system is executed in a virtualized environment and optionally test whether it is a specific implementation.
 	// Takes either boolean value to check if being executed in any virtualized environment, or one of "vm" and "container" to
 	// test against a generic type of virtualization solution, or one of "qemu", "kvm", "zvm", "vmware", "microsoft", "oracle",
-	// "xen", "bochs", "uml", "bhyve", "qnx", "openvz", "lxc", "lxc-libvirt", "systemd-nspawn", "docker", "podman", "rkt",
-	// "wsl", "acrn" to test against a specific implementation, or "private-users" to check whether we are running in a user namespace.
-	// See systemd-detect-virt for a full list of known virtualization technologies and their identifiers. If multiple virtualization
-	// technologies are nested, only the innermost is considered. The test may be negated by prepending an exclamation mark.
+	// "powervm", "xen", "bochs", "uml", "bhyve", "qnx", "openvz", "lxc", "lxc-libvirt", "systemd-nspawn", "docker", "podman",
+	// "rkt", "wsl", "proot", "pouch", "acrn" to test against a specific implementation, or "private-users" to check whether
+	// we are running in a user namespace. See systemd-detect-virt for a full list of known virtualization technologies and their
+	// identifiers. If multiple virtualization technologies are nested, only the innermost is considered. The test may be negated
+	// by prepending an exclamation mark.
 	ConditionVirtualization systemdconf.Value
 
 	// ConditionHost= may be used to match against the hostname or machine ID of the host. This either takes a hostname string (optionally
@@ -380,7 +390,9 @@ type UnitSection struct {
 	// ConditionKernelCommandLine= may be used to check whether a specific kernel command line option is set (or if prefixed
 	// with the exclamation mark — unset). The argument must either be a single word, or an assignment (i.e. two words, separated
 	// by "="). In the former case the kernel command line is searched for the word appearing as is, or as left hand side of an assignment.
-	// In the latter case, the exact assignment is looked for with right and left hand side matching.
+	// In the latter case, the exact assignment is looked for with right and left hand side matching. This operates on the kernel
+	// command line communicated to userspace via /proc/cmdline, except when the service manager is invoked as payload of a container
+	// manager, in which case the command line of PID 1 is used instead (i.e. /proc/1/cmdline).
 	ConditionKernelCommandLine systemdconf.Value
 
 	// ConditionKernelVersion= may be used to check whether the kernel version (as reported by uname -r) matches a certain expression
@@ -394,9 +406,18 @@ type UnitSection struct {
 	// on different distributions.
 	ConditionKernelVersion systemdconf.Value
 
+	// ConditionEnvironment= may be used to check whether a specific environment variable is set (or if prefixed with the exclamation
+	// mark — unset) in the service manager's environment block. The argument may be a single word, to check if the variable with
+	// this name is defined in the environment block, or an assignment ("name=value"), to check if the variable with this exact
+	// value is defined. Note that the environment block of the service manager itself is checked, i.e. not any variables defined
+	// with Environment= or EnvironmentFile=, as described above. This is particularly useful when the service manager runs
+	// inside a containerized environment or as per-user service manager, in order to check for variables passed in by the enclosing
+	// container manager or PAM.
+	ConditionEnvironment systemdconf.Value
+
 	// ConditionSecurity= may be used to check whether the given security technology is enabled on the system. Currently, the
-	// recognized values are "selinux", "apparmor", "tomoyo", "ima", "smack", "audit" and "uefi-secureboot". The test may
-	// be negated by prepending an exclamation mark.
+	// recognized values are "selinux", "apparmor", "tomoyo", "ima", "smack", "audit", "uefi-secureboot" and "tpm2". The
+	// test may be negated by prepending an exclamation mark.
 	ConditionSecurity systemdconf.Value
 
 	// Check whether the given capability exists in the capability bounding set of the service manager (i.e. this does not check
@@ -410,17 +431,29 @@ type UnitSection struct {
 	// at least one AC connector known and all AC connectors are disconnected from a power source.
 	ConditionACPower systemdconf.Value
 
-	// Takes one of /var or /etc as argument, possibly prefixed with a "!" (to inverting the condition). This condition may be used
-	// to conditionalize units on whether the specified directory requires an update because /usr's modification time is newer
+	// Takes one of /var/ or /etc/ as argument, possibly prefixed with a "!" (to invert the condition). This condition may be used
+	// to conditionalize units on whether the specified directory requires an update because /usr/'s modification time is newer
 	// than the stamp file .updated in the specified directory. This is useful to implement offline updates of the vendor operating
-	// system resources in /usr that require updating of /etc or /var on the next following boot. Units making use of this condition
+	// system resources in /usr/ that require updating of /etc/ or /var/ on the next following boot. Units making use of this condition
 	// should order themselves before systemd-update-done.service, to make sure they run before the stamp file's modification
 	// time gets reset indicating a completed update.
+	//
+	// If the systemd.condition-needs-update= option is specified on the kernel command line (taking a boolean), it will override
+	// the result of this condition check, taking precedence over any file modification time checks. If it is used systemd-update-done.service
+	// will not have immediate effect on any following ConditionNeedsUpdate= checks, until the system is rebooted where the
+	// kernel command line option is not specified anymore.
 	ConditionNeedsUpdate systemdconf.Value
 
-	// Takes a boolean argument. This condition may be used to conditionalize units on whether the system is booting up with an
-	// unpopulated /etc directory (specifically: an /etc with no /etc/machine-id). This may be used to populate /etc on the first
-	// boot after factory reset, or when a new system instance boots up for the first time.
+	// Takes a boolean argument. This condition may be used to conditionalize units on whether the system is booting up for the
+	// first time. This roughly means that /etc/ is unpopulated (for details, see "First Boot Semantics" in machine-id). This
+	// may be used to populate /etc/ on the first boot after factory reset, or when a new system instance boots up for the first time.
+	//
+	// For robustness, units with ConditionFirstBoot=yes should order themselves before first-boot-complete.target and
+	// pull in this passive target with Wants=. This ensures that in a case of an aborted first boot, these units will be re-run during
+	// the next system startup.
+	//
+	// If the systemd.condition-first-boot= option is specified on the kernel command line (taking a boolean), it will override
+	// the result of this condition check, taking precedence over /etc/machine-id existence checks.
 	ConditionFirstBoot systemdconf.Value
 
 	// Check for the exists of a file. If the specified absolute path name does not exist, the condition will fail. If the absolute
@@ -446,6 +479,13 @@ type UnitSection struct {
 	// ConditionPathIsReadWrite= is similar to ConditionPathExists= but verifies that the underlying file system is readable
 	// and writable (i.e. not mounted read-only).
 	ConditionPathIsReadWrite systemdconf.Value
+
+	// ConditionPathIsEncrypted= is similar to ConditionPathExists= but verifies that the underlying file system's backing
+	// block device is encrypted using dm-crypt/LUKS. Note that this check does not cover ext4 per-directory encryption, and
+	// only detects block level encryption. Moreover, if the specified path resides on a file system on top of a loopback block
+	// device, only encryption above the loopback device is detected. It is not detected whether the file system backing the loopback
+	// block device is encrypted.
+	ConditionPathIsEncrypted systemdconf.Value
 
 	// ConditionDirectoryNotEmpty= is similar to ConditionPathExists= but verifies that a certain path exists and is a non-empty
 	// directory.
@@ -529,6 +569,14 @@ type UnitSection struct {
 	// job queued for it. Use assertion expressions for units that cannot operate when specific requirements are not met, and
 	// when this is something the administrator or user should look into.
 	AssertKernelVersion systemdconf.Value
+
+	// Similar to the ConditionArchitecture=, ConditionVirtualization=, …, condition settings described above, these settings
+	// add assertion checks to the start-up of the unit. However, unlike the conditions settings, any assertion setting that
+	// is not met results in failure of the start job (which means this is logged loudly). Note that hitting a configured assertion
+	// does not cause the unit to enter the "failed" state (or in fact result in any state change of the unit), it affects only the
+	// job queued for it. Use assertion expressions for units that cannot operate when specific requirements are not met, and
+	// when this is something the administrator or user should look into.
+	AssertEnvironment systemdconf.Value
 
 	// Similar to the ConditionArchitecture=, ConditionVirtualization=, …, condition settings described above, these settings
 	// add assertion checks to the start-up of the unit. However, unlike the conditions settings, any assertion setting that
@@ -624,6 +672,14 @@ type UnitSection struct {
 	// does not cause the unit to enter the "failed" state (or in fact result in any state change of the unit), it affects only the
 	// job queued for it. Use assertion expressions for units that cannot operate when specific requirements are not met, and
 	// when this is something the administrator or user should look into.
+	AssertPathIsEncrypted systemdconf.Value
+
+	// Similar to the ConditionArchitecture=, ConditionVirtualization=, …, condition settings described above, these settings
+	// add assertion checks to the start-up of the unit. However, unlike the conditions settings, any assertion setting that
+	// is not met results in failure of the start job (which means this is logged loudly). Note that hitting a configured assertion
+	// does not cause the unit to enter the "failed" state (or in fact result in any state change of the unit), it affects only the
+	// job queued for it. Use assertion expressions for units that cannot operate when specific requirements are not met, and
+	// when this is something the administrator or user should look into.
 	AssertDirectoryNotEmpty systemdconf.Value
 
 	// Similar to the ConditionArchitecture=, ConditionVirtualization=, …, condition settings described above, these settings
@@ -665,9 +721,26 @@ type UnitSection struct {
 	// job queued for it. Use assertion expressions for units that cannot operate when specific requirements are not met, and
 	// when this is something the administrator or user should look into.
 	AssertControlGroupController systemdconf.Value
+
+	// Similar to the ConditionArchitecture=, ConditionVirtualization=, …, condition settings described above, these settings
+	// add assertion checks to the start-up of the unit. However, unlike the conditions settings, any assertion setting that
+	// is not met results in failure of the start job (which means this is logged loudly). Note that hitting a configured assertion
+	// does not cause the unit to enter the "failed" state (or in fact result in any state change of the unit), it affects only the
+	// job queued for it. Use assertion expressions for units that cannot operate when specific requirements are not met, and
+	// when this is something the administrator or user should look into.
+	AssertMemory systemdconf.Value
+
+	// Similar to the ConditionArchitecture=, ConditionVirtualization=, …, condition settings described above, these settings
+	// add assertion checks to the start-up of the unit. However, unlike the conditions settings, any assertion setting that
+	// is not met results in failure of the start job (which means this is logged loudly). Note that hitting a configured assertion
+	// does not cause the unit to enter the "failed" state (or in fact result in any state change of the unit), it affects only the
+	// job queued for it. Use assertion expressions for units that cannot operate when specific requirements are not met, and
+	// when this is something the administrator or user should look into.
+	AssertCPUs systemdconf.Value
 }
 
 // InstallSection represents installation information for the unit
+// (see https://www.freedesktop.org/software/systemd/man/systemd.unit.html#%5BInstall%5D%20Section%20Options for details)
 type InstallSection struct {
 	systemdconf.Section
 

@@ -1,10 +1,21 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package unit
 
 import "github.com/sergeymakinen/go-systemdconf"
 
+// TimerFile represents systemd.timer — Timer unit configuration
+// (see https://www.freedesktop.org/software/systemd/man/systemd.timer.html for details)
+type TimerFile struct {
+	systemdconf.File
+
+	Unit    UnitSection    // Generic information about the unit that is not dependent on the type of unit
+	Timer   TimerSection   // Information about the timer it defines
+	Install InstallSection // Installation information for the unit
+}
+
 // TimerSection represents information about the timer it defines
+// (see https://www.freedesktop.org/software/systemd/man/systemd.timer.html#Options for details)
 type TimerSection struct {
 	systemdconf.Section
 
@@ -41,7 +52,8 @@ type TimerSection struct {
 	// elapse and the configured unit is started. This is not the case for timers defined in the other directives.
 	//
 	// These are monotonic timers, independent of wall-clock time and timezones. If the computer is temporarily suspended,
-	// the monotonic clock pauses, too.
+	// the monotonic clock generally pauses, too. Note that if WakeSystem= is used, a different monotonic clock is selected that
+	// continues to advance while the system is suspended and thus can be used as the trigger to resume the system.
 	//
 	// If the empty string is assigned to any of these options, the list of timers is reset (both monotonic timers and OnCalendar=
 	// timers, see below), and all prior assignments will have no effect.
@@ -83,7 +95,8 @@ type TimerSection struct {
 	// elapse and the configured unit is started. This is not the case for timers defined in the other directives.
 	//
 	// These are monotonic timers, independent of wall-clock time and timezones. If the computer is temporarily suspended,
-	// the monotonic clock pauses, too.
+	// the monotonic clock generally pauses, too. Note that if WakeSystem= is used, a different monotonic clock is selected that
+	// continues to advance while the system is suspended and thus can be used as the trigger to resume the system.
 	//
 	// If the empty string is assigned to any of these options, the list of timers is reset (both monotonic timers and OnCalendar=
 	// timers, see below), and all prior assignments will have no effect.
@@ -125,7 +138,8 @@ type TimerSection struct {
 	// elapse and the configured unit is started. This is not the case for timers defined in the other directives.
 	//
 	// These are monotonic timers, independent of wall-clock time and timezones. If the computer is temporarily suspended,
-	// the monotonic clock pauses, too.
+	// the monotonic clock generally pauses, too. Note that if WakeSystem= is used, a different monotonic clock is selected that
+	// continues to advance while the system is suspended and thus can be used as the trigger to resume the system.
 	//
 	// If the empty string is assigned to any of these options, the list of timers is reset (both monotonic timers and OnCalendar=
 	// timers, see below), and all prior assignments will have no effect.
@@ -167,7 +181,8 @@ type TimerSection struct {
 	// elapse and the configured unit is started. This is not the case for timers defined in the other directives.
 	//
 	// These are monotonic timers, independent of wall-clock time and timezones. If the computer is temporarily suspended,
-	// the monotonic clock pauses, too.
+	// the monotonic clock generally pauses, too. Note that if WakeSystem= is used, a different monotonic clock is selected that
+	// continues to advance while the system is suspended and thus can be used as the trigger to resume the system.
 	//
 	// If the empty string is assigned to any of these options, the list of timers is reset (both monotonic timers and OnCalendar=
 	// timers, see below), and all prior assignments will have no effect.
@@ -209,7 +224,8 @@ type TimerSection struct {
 	// elapse and the configured unit is started. This is not the case for timers defined in the other directives.
 	//
 	// These are monotonic timers, independent of wall-clock time and timezones. If the computer is temporarily suspended,
-	// the monotonic clock pauses, too.
+	// the monotonic clock generally pauses, too. Note that if WakeSystem= is used, a different monotonic clock is selected that
+	// continues to advance while the system is suspended and thus can be used as the trigger to resume the system.
 	//
 	// If the empty string is assigned to any of these options, the list of timers is reset (both monotonic timers and OnCalendar=
 	// timers, see below), and all prior assignments will have no effect.
@@ -238,20 +254,37 @@ type TimerSection struct {
 	// consumption to suppress unnecessary CPU wake-ups. To get best accuracy, set this option to 1us. Note that the timer is still
 	// subject to the timer slack configured via systemd-system.conf's TimerSlackNSec= setting. See prctl for details. To
 	// optimize power consumption, make sure to set this value as high as possible and as low as necessary.
+	//
+	// Note that this setting is primarily a power saving option that allows coalescing CPU wake-ups. It should not be confused
+	// with RandomizedDelaySec= (see below) which adds a random value to the time the timer shall elapse next and whose purpose
+	// is the opposite: to stretch elapsing of timer events over a longer period to reduce workload spikes. For further details
+	// and explanations and how both settings play together, see below.
 	AccuracySec systemdconf.Value
 
 	// Delay the timer by a randomly selected, evenly distributed amount of time between 0 and the specified time value. Defaults
 	// to 0, indicating that no randomized delay shall be applied. Each timer unit will determine this delay randomly before each
-	// iteration, and the delay will simply be added on top of the next determined elapsing time. This is useful to stretch dispatching
-	// of similarly configured timer events over a certain amount time, to avoid that they all fire at the same time, possibly resulting
-	// in resource congestion. Note the relation to AccuracySec= above: the latter allows the service manager to coalesce timer
-	// events within a specified time range in order to minimize wakeups, the former does the opposite: it stretches timer events
-	// over a time range, to make it unlikely that they fire simultaneously. If RandomizedDelaySec= and AccuracySec= are used
-	// in conjunction, first the randomized delay is added, and then the result is possibly further shifted to coalesce it with
-	// other timer events happening on the system. As mentioned above AccuracySec= defaults to 1min and RandomizedDelaySec=
-	// to 0, thus encouraging coalescing of timer events. In order to optimally stretch timer events over a certain range of time,
-	// make sure to set RandomizedDelaySec= to a higher value, and AccuracySec=1us.
+	// iteration, and the delay will simply be added on top of the next determined elapsing time, unless modified with FixedRandomDelay=,
+	// see below.
+	//
+	// This setting is useful to stretch dispatching of similarly configured timer events over a certain time interval, to prevent
+	// them from firing all at the same time, possibly resulting in resource congestion.
+	//
+	// Note the relation to AccuracySec= above: the latter allows the service manager to coalesce timer events within a specified
+	// time range in order to minimize wakeups, while this setting does the opposite: it stretches timer events over an interval,
+	// to make it unlikely that they fire simultaneously. If RandomizedDelaySec= and AccuracySec= are used in conjunction,
+	// first the randomized delay is added, and then the result is possibly further shifted to coalesce it with other timer events
+	// happening on the system. As mentioned above AccuracySec= defaults to 1 minute and RandomizedDelaySec= to 0, thus encouraging
+	// coalescing of timer events. In order to optimally stretch timer events over a certain range of time, set AccuracySec=1us
+	// and RandomizedDelaySec= to some higher value.
 	RandomizedDelaySec systemdconf.Value
+
+	// Takes a boolean argument. When enabled, the randomized offset specified by RandomizedDelaySec= is reused for all firings
+	// of the same timer. For a given timer unit, the offset depends on the machine ID, user identifier and timer name, which means
+	// that it is stable between restarts of the manager. This effectively creates a fixed offset for an individual timer, reducing
+	// the jitter in firings of this timer, while still avoiding firing at the same time as other similarly configured timers.
+	//
+	// This setting has no effect if RandomizedDelaySec= is set to 0. Defaults to false.
+	FixedRandomDelay systemdconf.Value
 
 	// These options take boolean arguments. When true, the service unit will be triggered when the system clock (CLOCK_REALTIME)
 	// jumps relative to the monotonic clock (CLOCK_MONOTONIC), or when the local system timezone is modified. These options
@@ -272,8 +305,9 @@ type TimerSection struct {
 
 	// Takes a boolean argument. If true, the time when the service unit was last triggered is stored on disk. When the timer is activated,
 	// the service unit is triggered immediately if it would have been triggered at least once during the time when the timer was
-	// inactive. This is useful to catch up on missed runs of the service when the system was powered down. Note that this setting
-	// only has an effect on timers configured with OnCalendar=. Defaults to false.
+	// inactive. Such triggering is nonetheless subject to the delay imposed by RandomizedDelaySec=. This is useful to catch
+	// up on missed runs of the service when the system was powered down. Note that this setting only has an effect on timers configured
+	// with OnCalendar=. Defaults to false.
 	//
 	// Use systemctl clean --what=state … on the timer unit to remove the timestamp file maintained by this option from disk. In
 	// particular, use this command before uninstalling a timer unit. See systemctl for details.
@@ -284,22 +318,18 @@ type TimerSection struct {
 	// will not take care of suspending it again after any work that is to be done is finished. Defaults to false.
 	//
 	// Note that this functionality requires privileges and is thus generally only available in the system service manager.
+	//
+	// Note that behaviour of monotonic clock timers (as configured with OnActiveSec=, OnBootSec=, OnStartupSec=, OnUnitActiveSec=,
+	// OnUnitInactiveSec=, see above) is altered depending on this option. If false, a monotonic clock is used that is paused
+	// during system suspend (CLOCK_MONOTONIC), if true a different monotonic clock is used that continues advancing during
+	// system suspend (CLOCK_BOOTTIME), see clock_getres for details.
 	WakeSystem systemdconf.Value
 
-	// Takes a boolean argument. If true, an elapsed timer will stay loaded, and its state remains queryable. If false, an elapsed
-	// timer unit that cannot elapse anymore is unloaded. Turning this off is particularly useful for transient timer units that
-	// shall disappear after they first elapse. Note that this setting has an effect on repeatedly starting a timer unit that only
-	// elapses once: if RemainAfterElapse= is on, it will not be started again, and is guaranteed to elapse only once. However,
-	// if RemainAfterElapse= is off, it might be started again if it is already elapsed, and thus be triggered multiple times.
-	// Defaults to yes.
+	// Takes a boolean argument. If true, a timer will stay loaded, and its state remains queryable even after it elapsed and the
+	// associated unit (as configured with Unit=, see above) deactivated again. If false, an elapsed timer unit that cannot elapse
+	// anymore is unloaded once its associated unit deactivated again. Turning this off is particularly useful for transient
+	// timer units. Note that this setting has an effect when repeatedly starting a timer unit: if RemainAfterElapse= is on, starting
+	// the timer a second time has no effect. However, if RemainAfterElapse= is off and the timer unit was already unloaded, it
+	// can be started again, and thus the service can be triggered multiple times. Defaults to true.
 	RemainAfterElapse systemdconf.Value
-}
-
-// TimerFile represents information about a timer controlled and supervised by systemd, for timer-based activation
-type TimerFile struct {
-	systemdconf.File
-
-	Unit    UnitSection    // Generic information about the unit that is not dependent on the type of unit
-	Timer   TimerSection   // Information about the timer it defines
-	Install InstallSection // Installation information for the unit
 }

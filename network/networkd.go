@@ -1,10 +1,20 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package network
 
 import "github.com/sergeymakinen/go-systemdconf"
 
-// NetworkdNetworkSection represents global network parameters
+// NetworkdFile represents networkd.conf, networkd.conf.d — Global Network configuration files
+// (see https://www.freedesktop.org/software/systemd/man/networkd.conf.html for details)
+type NetworkdFile struct {
+	systemdconf.File
+
+	Network NetworkdNetworkSection // [Network] section
+	DHCP    NetworkdDHCPSection    // DHCP Unique Identifier (DUID) value used by DHCP protocol
+}
+
+// NetworkdNetworkSection represents [Network] section
+// (see https://www.freedesktop.org/software/systemd/man/networkd.conf.html#%5BNetwork%5D%20Section%20Options for details)
 type NetworkdNetworkSection struct {
 	systemdconf.Section
 
@@ -15,9 +25,14 @@ type NetworkdNetworkSection struct {
 	// Specifies the time interval to calculate the traffic speed of each interface. If SpeedMeter=no, the value is ignored.
 	// Defaults to 10sec.
 	SpeedMeterIntervalSec systemdconf.Value
+
+	// A boolean. When true, systemd-networkd will store any routes configured by other tools in its memory. When false, systemd-networkd
+	// will not manage the foreign routes, thus they are kept even if KeepConfiguration= is false. Defaults to yes.
+	ManageForeignRoutes systemdconf.Value
 }
 
 // NetworkdDHCPSection represents DHCP Unique Identifier (DUID) value used by DHCP protocol
+// (see https://www.freedesktop.org/software/systemd/man/networkd.conf.html#%5BDHCP%5D%20Section%20Options for details)
 type NetworkdDHCPSection struct {
 	systemdconf.Section
 
@@ -49,12 +64,4 @@ type NetworkdDHCPSection struct {
 	// This specifies a 14 byte DUID, with the type DUID-EN ("00:02"), enterprise number 43793 ("00:00:ab:11"), and identifier
 	// value "f9:2a:c2:77:29:f9:5c:00".
 	DUIDRawData systemdconf.Value
-}
-
-// NetworkdFile represents global network parameters
-type NetworkdFile struct {
-	systemdconf.File
-
-	Network NetworkdNetworkSection // Global network parameters
-	DHCP    NetworkdDHCPSection    // DHCP Unique Identifier (DUID) value used by DHCP protocol
 }

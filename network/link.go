@@ -1,11 +1,21 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package network
 
 import "github.com/sergeymakinen/go-systemdconf"
 
-// LinkServiceSection represents parameters which determines if a given link file may be applied to a given device
-type LinkServiceSection struct {
+// LinkFile represents systemd.link — Network device configuration
+// (see https://www.freedesktop.org/software/systemd/man/systemd.link.html for details)
+type LinkFile struct {
+	systemdconf.File
+
+	Match LinkMatchSection // [Match] section, which determines if a given link file may be applied to a given device
+	Link  LinkLinkSection  // [Link] section specifying how the device should be configured
+}
+
+// LinkMatchSection represents [Match] section, which determines if a given link file may be applied to a given device
+// (see https://www.freedesktop.org/software/systemd/man/systemd.link.html#%5BMatch%5D%20Section%20Options for details)
+type LinkMatchSection struct {
 	systemdconf.Section
 
 	// A whitespace-separated list of hardware addresses. Use full colon-, hyphen- or dot-delimited hexadecimal. See the example
@@ -17,20 +27,22 @@ type LinkServiceSection struct {
 	// 	MACAddress=01:23:45:67:89:ab 00-11-22-33-44-55 AABB.CCDD.EEFF
 	MACAddress systemdconf.Value
 
-	// A whitespace-separated list of shell-style globs matching the device name, as exposed by the udev property "INTERFACE".
-	// This cannot be used to match on names that have already been changed from userspace. Caution is advised when matching on
-	// kernel-assigned names, as they are known to be unstable between reboots.
-	OriginalName systemdconf.Value
+	// A whitespace-separated list of hardware's permanent addresses. While MACAddress= matches the device's current MAC
+	// address, this matches the device's permanent MAC address, which may be different from the current one. Use full colon-,
+	// hyphen- or dot-delimited hexadecimal. This option may appear more than once, in which case the lists are merged. If the
+	// empty string is assigned to this option, the list of hardware addresses defined prior to this is reset.
+	PermanentMACAddress systemdconf.Value
 
 	// A whitespace-separated list of shell-style globs matching the persistent path, as exposed by the udev property ID_PATH.
 	Path systemdconf.Value
 
 	// A whitespace-separated list of shell-style globs matching the driver currently bound to the device, as exposed by the
 	// udev property ID_NET_DRIVER of its parent device, or if that is not set, the driver as exposed by ethtool -i of the device
-	// itself.
+	// itself. If the list is prefixed with a "!", the test is inverted.
 	Driver systemdconf.Value
 
-	// A whitespace-separated list of shell-style globs matching the device type, as exposed by the udev property DEVTYPE.
+	// A whitespace-separated list of shell-style globs matching the device type, as exposed by networkctl status. If the list
+	// is prefixed with a "!", the test is inverted.
 	Type systemdconf.Value
 
 	// A whitespace-separated list of udev property name with its value after a equal ("="). If multiple properties are specified,
@@ -43,6 +55,11 @@ type LinkServiceSection struct {
 	//
 	// then, the .link file matches only when an interface has all the above three properties.
 	Property systemdconf.Value
+
+	// A whitespace-separated list of shell-style globs matching the device name, as exposed by the udev property "INTERFACE".
+	// This cannot be used to match on names that have already been changed from userspace. Caution is advised when matching on
+	// kernel-assigned names, as they are known to be unstable between reboots.
+	OriginalName systemdconf.Value
 
 	// Matches against the hostname or machine ID of the host. See ConditionHost= in systemd.unit for details. When prefixed
 	// with an exclamation mark ("!"), the result is negated. If an empty string is assigned, then previously assigned value is
@@ -70,7 +87,8 @@ type LinkServiceSection struct {
 	Architecture systemdconf.Value
 }
 
-// LinkLinkSection represents parameters how the device should be configured
+// LinkLinkSection represents [Link] section specifying how the device should be configured
+// (see https://www.freedesktop.org/software/systemd/man/systemd.link.html#%5BLink%5D%20Section%20Options for details)
 type LinkLinkSection struct {
 	systemdconf.Section
 
@@ -89,10 +107,12 @@ type LinkLinkSection struct {
 	// 	random: If the kernel is using a random MAC address, nothing is done. Otherwise, a new address is randomly generated each
 	// 	time the device appears, typically at boot. Either way, the random address will have the "unicast" and "locally administered"
 	// 	bits set.
-	// 	none: Keeps the MAC address assigned by the kernel.
+	// 	none: Keeps the MAC address assigned by the kernel. Or use the MAC address specified in MACAddress=.
+	//
+	// An empty string assignment is equivalent to setting "none".
 	MACAddressPolicy systemdconf.Value
 
-	// The MAC address to use, if no MACAddressPolicy= is specified.
+	// The interface MAC address to use. For this setting to take effect, MACAddressPolicy= must either be unset, empty, or "none".
 	MACAddress systemdconf.Value
 
 	// An ordered, space-separated list of policies by which the interface name should be set. NamePolicy= may be disabled by
@@ -122,6 +142,16 @@ type LinkLinkSection struct {
 	// prefix, for example "internal0"/"external0" or "lan0"/"lan1"/"lan3".
 	Name systemdconf.Value
 
+	// A space-separated list of policies by which the interface's alternative names should be set. Each of the policies may fail,
+	// and all successful policies are used. The available policies are "database", "onboard", "slot", "path", and "mac". If
+	// the kernel does not support the alternative names, then this setting will be ignored.
+	AlternativeNamesPolicy systemdconf.Value
+
+	// The alternative interface name to use. This option can be specified multiple times. If the empty string is assigned to this
+	// option, the list is reset, and all prior assignments have no effect. If the kernel does not support the alternative names,
+	// then this setting will be ignored.
+	AlternativeName systemdconf.Value
+
 	// The maximum transmission unit in bytes to set for the device. The usual suffixes K, M, G, are supported and are understood
 	// to the base of 1024.
 	MTUBytes systemdconf.Value
@@ -137,7 +167,7 @@ type LinkLinkSection struct {
 	// by which two connected ethernet devices choose common transmission parameters, such as speed, duplex mode, and flow control.
 	// When unset, the kernel's default will be used.
 	//
-	// Note that if autonegotiation is enabled, speed and duplex settings are read-only. If autonegotation is disabled, speed
+	// Note that if autonegotiation is enabled, speed and duplex settings are read-only. If autonegotiation is disabled, speed
 	// and duplex settings are writable if the driver supports multiple link modes.
 	AutoNegotiation systemdconf.Value
 
@@ -191,6 +221,14 @@ type LinkLinkSection struct {
 	// all prior assignments have no effect.
 	Advertise systemdconf.Value
 
+	// Takes a boolean. If set to true, the hardware offload for checksumming of ingress network packets is enabled. When unset,
+	// the kernel's default will be used.
+	ReceiveChecksumOffload systemdconf.Value
+
+	// Takes a boolean. If set to true, the hardware offload for checksumming of egress network packets is enabled. When unset,
+	// the kernel's default will be used.
+	TransmitChecksumOffload systemdconf.Value
+
 	// Takes a boolean. If set to true, the TCP Segmentation Offload (TSO) is enabled. When unset, the kernel's default will be
 	// used.
 	TCPSegmentationOffload systemdconf.Value
@@ -221,17 +259,31 @@ type LinkLinkSection struct {
 	// Sets the number of combined set channels (a number between 1 and 4294967295).
 	CombinedChannels systemdconf.Value
 
-	// Takes a integer. Specifies the NIC receive ring buffer size. When unset, the kernel's default will be used.
+	// Takes an integer. Specifies the maximum number of pending packets in the NIC receive buffer. When unset, the kernel's default
+	// will be used.
 	RxBufferSize systemdconf.Value
 
-	// Takes a integer. Specifies the NIC transmit ring buffer size. When unset, the kernel's default will be used.
+	// Takes an integer. Specifies the maximum number of pending packets in the NIC mini receive buffer. When unset, the kernel's
+	// default will be used.
+	RxMiniBufferSize systemdconf.Value
+
+	// Takes an integer. Specifies the maximum number of pending packets in the NIC jumbo receive buffer. When unset, the kernel's
+	// default will be used.
+	RxJumboBufferSize systemdconf.Value
+
+	// Takes an integer. Specifies the maximum number of pending packets in the NIC transmit buffer. When unset, the kernel's
+	// default will be used.
 	TxBufferSize systemdconf.Value
-}
 
-// LinkFile represents network link configuration is performed by the net_setup_link udev builtin
-type LinkFile struct {
-	systemdconf.File
+	// Takes a boolean. When set, enables the receive flow control, also known as the ethernet receive PAUSE message (generate
+	// and send ethernet PAUSE frames). When unset, the kernel's default will be used.
+	RxFlowControl systemdconf.Value
 
-	Service LinkServiceSection // Parameters which determines if a given link file may be applied to a given device
-	Link    LinkLinkSection    // Parameters how the device should be configured
+	// Takes a boolean. When set, enables the transmit flow control, also known as the ethernet transmit PAUSE message (respond
+	// to received ethernet PAUSE frames). When unset, the kernel's default will be used.
+	TxFlowControl systemdconf.Value
+
+	// Takes a boolean. When set, the auto negotiation enables the interface to exchange state advertisements with the connected
+	// peer so that the two devices can agree on the ethernet PAUSE configuration. When unset, the kernel's default will be used.
+	AutoNegotiationFlowControl systemdconf.Value
 }

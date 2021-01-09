@@ -1,3 +1,4 @@
-// Package network provides file mappings for configuring network links through
-// the net-setup-link udev builtin and networks through systemd-networkd
+// Package network provides mappings for the following categories:
+// - Network directives
+//   (see https://www.freedesktop.org/software/systemd/man/systemd.directives.html#Network%20directives for details)
 package network

@@ -1,10 +1,11 @@
-// DO NOT EDIT. This file is generated from systemd 244 by generatesdconf
+// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
 
 package unit
 
 import "github.com/sergeymakinen/go-systemdconf"
 
-// ExecOptions represents a subset of configuration options which define the execution environment of spawned processes
+// ExecOptions represents systemd.exec — Execution environment configuration
+// (see https://www.freedesktop.org/software/systemd/man/systemd.exec.html for details)
 type ExecOptions struct {
 	// Takes a directory path relative to the service's root directory specified by RootDirectory=, or the special value "~".
 	// Sets the working directory for executed processes. If set to "~", the home directory of the user specified in User= is used.
@@ -36,20 +37,122 @@ type ExecOptions struct {
 	// with rw mode, "block-loop" and "block-blkext" with rwm mode to DeviceAllow=. See systemd.resource-control for the details
 	// about DevicePolicy= or DeviceAllow=. Also, see PrivateDevices= below, as it may change the setting of DevicePolicy=.
 	//
+	// Units making use of RootImage= automatically gain an After= dependency on systemd-udevd.service.
+	//
 	// This option is only available for system services and is not supported for services running in per-user instances of the
 	// service manager.
 	RootImage systemdconf.Value
 
-	// Takes a boolean argument. If on, a private mount namespace for the unit's processes is created and the API file systems /proc,
-	// /sys, and /dev are mounted inside of it, unless they are already mounted. Note that this option has no effect unless used
+	// Takes a comma-separated list of mount options that will be used on disk images specified by RootImage=. Optionally a partition
+	// name can be prefixed, followed by colon, in case the image has multiple partitions, otherwise partition name "root" is
+	// implied. Options for multiple partitions can be specified in a single line with space separators. Assigning an empty string
+	// removes previous assignments. Duplicated options are ignored. For a list of valid mount options, please refer to mount.
+	//
+	// Valid partition names follow the Discoverable Partitions Specification.
+	//
+	// 	+----------------+
+	// 	| PARTITION NAME |
+	// 	+----------------+
+	// 	| root           |
+	// 	| root-secondary |
+	// 	| home           |
+	// 	| srv            |
+	// 	| esp            |
+	// 	| xbootldr       |
+	// 	| tmp            |
+	// 	| var            |
+	// 	| usr            |
+	// 	+----------------+
+	//
+	// This option is only available for system services and is not supported for services running in per-user instances of the
+	// service manager.
+	RootImageOptions systemdconf.Value
+
+	// Takes a data integrity (dm-verity) root hash specified in hexadecimal, or the path to a file containing a root hash in ASCII
+	// hexadecimal format. This option enables data integrity checks using dm-verity, if the used image contains the appropriate
+	// integrity data (see above) or if RootVerity= is used. The specified hash must match the root hash of integrity data, and
+	// is usually at least 256 bits (and hence 64 formatted hexadecimal characters) long (in case of SHA256 for example). If this
+	// option is not specified, but the image file carries the "user.verity.roothash" extended file attribute (see xattr),
+	// then the root hash is read from it, also as formatted hexadecimal characters. If the extended file attribute is not found
+	// (or is not supported by the underlying file system), but a file with the .roothash suffix is found next to the image file,
+	// bearing otherwise the same name (except if the image has the .raw suffix, in which case the root hash file must not have it
+	// in its name), the root hash is read from it and automatically used, also as formatted hexadecimal characters.
+	//
+	// If the disk image contains a separate /usr/ partition it may also be Verity protected, in which case the root hash may configured
+	// via an extended attribute "user.verity.usrhash" or a .usrhash file adjacent to the disk image. There's currently no option
+	// to configure the root hash for the /usr/ file system via the unit file directly.
+	//
+	// This option is only available for system services and is not supported for services running in per-user instances of the
+	// service manager.
+	RootHash systemdconf.Value
+
+	// Takes a PKCS7 signature of the RootHash= option as a path to a DER-encoded signature file, or as an ASCII base64 string encoding
+	// of a DER-encoded signature prefixed by "base64:". The dm-verity volume will only be opened if the signature of the root
+	// hash is valid and signed by a public key present in the kernel keyring. If this option is not specified, but a file with the
+	// .roothash.p7s suffix is found next to the image file, bearing otherwise the same name (except if the image has the .raw suffix,
+	// in which case the signature file must not have it in its name), the signature is read from it and automatically used.
+	//
+	// If the disk image contains a separate /usr/ partition it may also be Verity protected, in which case the signature for the
+	// root hash may configured via a .usrhash.p7s file adjacent to the disk image. There's currently no option to configure the
+	// root hash signature for the /usr/ via the unit file directly.
+	//
+	// This option is only available for system services and is not supported for services running in per-user instances of the
+	// service manager.
+	RootHashSignature systemdconf.Value
+
+	// Takes the path to a data integrity (dm-verity) file. This option enables data integrity checks using dm-verity, if RootImage=
+	// is used and a root-hash is passed and if the used image itself does not contains the integrity data. The integrity data must
+	// be matched by the root hash. If this option is not specified, but a file with the .verity suffix is found next to the image file,
+	// bearing otherwise the same name (except if the image has the .raw suffix, in which case the verity data file must not have
+	// it in its name), the verity data is read from it and automatically used.
+	//
+	// This option is supported only for disk images that contain a single file system, without an enveloping partition table.
+	// Images that contain a GPT partition table should instead include both root file system and matching Verity data in the same
+	// image, implementing the Discoverable Partition Specification.
+	//
+	// This option is only available for system services and is not supported for services running in per-user instances of the
+	// service manager.
+	RootVerity systemdconf.Value
+
+	// Takes a boolean argument. If on, a private mount namespace for the unit's processes is created and the API file systems /proc/,
+	// /sys/, and /dev/ are mounted inside of it, unless they are already mounted. Note that this option has no effect unless used
 	// in conjunction with RootDirectory=/RootImage= as these three mounts are generally mounted in the host anyway, and unless
 	// the root directory is changed, the private mount namespace will be a 1:1 copy of the host's, and include these three mounts.
-	// Note that the /dev file system of the host is bind mounted if this option is used without PrivateDevices=. To run the service
+	// Note that the /dev/ file system of the host is bind mounted if this option is used without PrivateDevices=. To run the service
 	// with a private, minimal version of /dev/, combine this option with PrivateDevices=.
 	//
 	// This option is only available for system services and is not supported for services running in per-user instances of the
 	// service manager.
 	MountAPIVFS systemdconf.Value
+
+	// Takes one of "noaccess", "invisible", "ptraceable" or "default" (which it defaults to). When set, this controls the "hidepid="
+	// mount option of the "procfs" instance for the unit that controls which directories with process metainformation (/proc/PID)
+	// are visible and accessible: when set to "noaccess" the ability to access most of other users' process metadata in /proc/
+	// is taken away for processes of the service. When set to "invisible" processes owned by other users are hidden from /proc/.
+	// If "ptraceable" all processes that cannot be ptrace()'ed by a process are hidden to it. If "default" no restrictions on
+	// /proc/ access or visibility are made. For further details see The /proc Filesystem. It is generally recommended to run
+	// most system services with this option set to "invisible". This option is implemented via file system namespacing, and
+	// thus cannot be used with services that shall be able to install mount points in the host file system hierarchy. It also cannot
+	// be used for services that need to access metainformation about other users' processes. This option implies MountAPIVFS=.
+	//
+	// If the kernel doesn't support per-mount point hidepid= mount options this setting remains without effect, and the unit's
+	// processes will be able to access and see other process as if the option was not used.
+	//
+	// This option is only available for system services and is not supported for services running in per-user instances of the
+	// service manager.
+	ProtectProc systemdconf.Value
+
+	// Takes one of "all" (the default) and "pid". If the latter all files and directories not directly associated with process
+	// management and introspection are made invisible in the /proc/ file system configured for the unit's processes. This controls
+	// the "subset=" mount option of the "procfs" instance for the unit. For further details see The /proc Filesystem. Note that
+	// Linux exposes various kernel APIs via /proc/, which are made unavailable with this setting. Since these APIs are used frequently
+	// this option is useful only in a few, specific cases, and is not suitable for most non-trivial programs.
+	//
+	// Much like ProtectProc= above, this is implemented via file system mount namespacing, and hence the same restrictions
+	// apply: it is only available to system services, it disables mount propagation to the host mount table, and it implies MountAPIVFS=.
+	// Also, like ProtectProc= this setting is gracefully disabled if the used kernel does not support the "subset=" mount option
+	// of "procfs".
+	ProcSubset systemdconf.Value
 
 	// Configures unit-specific bind mounts. A bind mount makes a particular file or directory available at an additional place
 	// in the unit's view of the file system. Any bind mounts created with this option are specific to the unit, and are not visible
@@ -105,6 +208,35 @@ type ExecOptions struct {
 	// service manager.
 	BindReadOnlyPaths systemdconf.Value
 
+	// This setting is similar to RootImage= in that it mounts a file system hierarchy from a block device node or loopback file,
+	// but the destination directory can be specified as well as mount options. This option expects a whitespace separated list
+	// of mount definitions. Each definition consists of a colon-separated tuple of source path and destination definitions,
+	// optionally followed by another colon and a list of mount options.
+	//
+	// Mount options may be defined as a single comma-separated list of options, in which case they will be implicitly applied
+	// to the root partition on the image, or a series of colon-separated tuples of partition name and mount options. Valid partition
+	// names and mount options are the same as for RootImageOptions= setting described above.
+	//
+	// Each mount definition may be prefixed with "-", in which case it will be ignored when its source path does not exist. The source
+	// argument is a path to a block device node or regular file. If source or destination contain a ":", it needs to be escaped as
+	// "\:". The device node or file system image file needs to follow the same rules as specified for RootImage=. Any mounts created
+	// with this option are specific to the unit, and are not visible in the host's mount table.
+	//
+	// These settings may be used more than once, each usage appends to the unit's list of mount paths. If the empty string is assigned,
+	// the entire list of mount paths defined prior to this is reset.
+	//
+	// Note that the destination directory must exist or systemd must be able to create it. Thus, it is not possible to use those
+	// options for mount points nested underneath paths specified in InaccessiblePaths=, or under /home/ and other protected
+	// directories if ProtectHome=yes is specified.
+	//
+	// When DevicePolicy= is set to "closed" or "strict", or set to "auto" and DeviceAllow= is set, then this setting adds /dev/loop-control
+	// with rw mode, "block-loop" and "block-blkext" with rwm mode to DeviceAllow=. See systemd.resource-control for the details
+	// about DevicePolicy= or DeviceAllow=. Also, see PrivateDevices= below, as it may change the setting of DevicePolicy=.
+	//
+	// This option is only available for system services and is not supported for services running in per-user instances of the
+	// service manager.
+	MountImages systemdconf.Value
+
 	// Set the UNIX user or group that the processes are executed as, respectively. Takes a single user or group name, or a numeric
 	// ID as argument. For system services (services run by the system service manager, i.e. managed by PID 1) and for user services
 	// of the root user (services managed by root's instance of systemd --user), the default is "root", but User= may be used to
@@ -112,15 +244,18 @@ type ExecOptions struct {
 	// valid setting is the same user the user's service manager is running as. If no group is set, the default group of the user is
 	// used. This setting does not affect commands whose command line is prefixed with "+".
 	//
-	// Note that restrictions on the user/group name syntax are enforced: the specified name must consist only of the characters
-	// a-z, A-Z, 0-9, "_" and "-", except for the first character which must be one of a-z, A-Z or "_" (i.e. numbers and "-" are not
-	// permitted as first character). The user/group name must have at least one character, and at most 31. These restrictions
-	// are enforced in order to avoid ambiguities and to ensure user/group names and unit files remain portable among Linux systems.
+	// Note that this enforces only weak restrictions on the user/group name syntax, but will generate warnings in many cases
+	// where user/group names do not adhere to the following rules: the specified name should consist only of the characters a-z,
+	// A-Z, 0-9, "_" and "-", except for the first character which must be one of a-z, A-Z and "_" (i.e. digits and "-" are not permitted
+	// as first character). The user/group name must have at least one character, and at most 31. These restrictions are made in
+	// order to avoid ambiguities and to ensure user/group names and unit files remain portable among Linux systems. For further
+	// details on the names accepted and the names warned about see User/Group Name Syntax.
 	//
 	// When used in conjunction with DynamicUser= the user/group name specified is dynamically allocated at the time the service
 	// is started, and released at the time the service is stopped — unless it is already allocated statically (see below). If DynamicUser=
 	// is not used the specified user and group must have been created statically in the user database no later than the moment the
-	// service is started, for example using the sysusers.d facility, which is applied at boot or package install time.
+	// service is started, for example using the sysusers.d facility, which is applied at boot or package install time. If the
+	// user does not exist by then program invocation will fail.
 	//
 	// If the User= setting is used the supplementary group list is initialized from the specified user's default group list,
 	// as defined in the system's user and group database. Additional groups may be configured through the SupplementaryGroups=
@@ -134,15 +269,18 @@ type ExecOptions struct {
 	// valid setting is the same user the user's service manager is running as. If no group is set, the default group of the user is
 	// used. This setting does not affect commands whose command line is prefixed with "+".
 	//
-	// Note that restrictions on the user/group name syntax are enforced: the specified name must consist only of the characters
-	// a-z, A-Z, 0-9, "_" and "-", except for the first character which must be one of a-z, A-Z or "_" (i.e. numbers and "-" are not
-	// permitted as first character). The user/group name must have at least one character, and at most 31. These restrictions
-	// are enforced in order to avoid ambiguities and to ensure user/group names and unit files remain portable among Linux systems.
+	// Note that this enforces only weak restrictions on the user/group name syntax, but will generate warnings in many cases
+	// where user/group names do not adhere to the following rules: the specified name should consist only of the characters a-z,
+	// A-Z, 0-9, "_" and "-", except for the first character which must be one of a-z, A-Z and "_" (i.e. digits and "-" are not permitted
+	// as first character). The user/group name must have at least one character, and at most 31. These restrictions are made in
+	// order to avoid ambiguities and to ensure user/group names and unit files remain portable among Linux systems. For further
+	// details on the names accepted and the names warned about see User/Group Name Syntax.
 	//
 	// When used in conjunction with DynamicUser= the user/group name specified is dynamically allocated at the time the service
 	// is started, and released at the time the service is stopped — unless it is already allocated statically (see below). If DynamicUser=
 	// is not used the specified user and group must have been created statically in the user database no later than the moment the
-	// service is started, for example using the sysusers.d facility, which is applied at boot or package install time.
+	// service is started, for example using the sysusers.d facility, which is applied at boot or package install time. If the
+	// user does not exist by then program invocation will fail.
 	//
 	// If the User= setting is used the supplementary group list is initialized from the specified user's default group list,
 	// as defined in the system's user and group database. Additional groups may be configured through the SupplementaryGroups=
@@ -171,7 +309,7 @@ type ExecOptions struct {
 	// NoNewPrivileges= and RestrictSUIDSGID= are implicitly enabled (and cannot be disabled), to ensure that processes invoked
 	// cannot take benefit or create SUID/SGID files or directories. Moreover ProtectSystem=strict and ProtectHome=read-only
 	// are implied, thus prohibiting the service to write to arbitrary file system locations. In order to allow the service to
-	// write to certain directories, they have to be whitelisted using ReadWritePaths=, but care must be taken so that UID/GID
+	// write to certain directories, they have to be allow-listed using ReadWritePaths=, but care must be taken so that UID/GID
 	// recycling doesn't create security issues involving files created by the service. Use RuntimeDirectory= (see below)
 	// in order to assign a writable runtime directory to a service, owned by the dynamic user/group and removed automatically
 	// when the unit is terminated. Use StateDirectory=, CacheDirectory= and LogsDirectory= in order to assign a set of writable
@@ -218,6 +356,8 @@ type ExecOptions struct {
 	// set is reset to the full set of available capabilities, also undoing any previous settings. This does not affect commands
 	// prefixed with "+".
 	//
+	// Use systemd-analyze's capability command to retrieve a list of capabilities defined on the local system.
+	//
 	// Example: if a unit has the following,
 	//
 	// 	CapabilityBoundingSet=CAP_A CAP_B CapabilityBoundingSet=CAP_B CAP_C
@@ -248,9 +388,9 @@ type ExecOptions struct {
 	// that a process and its children can never elevate privileges again. Defaults to false, but certain settings override this
 	// and ignore the value of this setting. This is the case when SystemCallFilter=, SystemCallArchitectures=, RestrictAddressFamilies=,
 	// RestrictNamespaces=, PrivateDevices=, ProtectKernelTunables=, ProtectKernelModules=, ProtectKernelLogs=,
-	// MemoryDenyWriteExecute=, RestrictRealtime=, RestrictSUIDSGID=, DynamicUser= or LockPersonality= are specified.
-	// Note that even if this setting is overridden by them, systemctl show shows the original value of this setting. Also see No
-	// New Privileges Flag.
+	// ProtectClock=, MemoryDenyWriteExecute=, RestrictRealtime=, RestrictSUIDSGID=, DynamicUser= or LockPersonality=
+	// are specified. Note that even if this setting is overridden by them, systemctl show shows the original value of this setting.
+	// Also see No New Privileges Flag.
 	NoNewPrivileges systemdconf.Value
 
 	// Controls the secure bits set for the executed process. Takes a space-separated combination of options from the following
@@ -265,8 +405,8 @@ type ExecOptions struct {
 	SELinuxContext systemdconf.Value
 
 	// Takes a profile name as argument. The process executed by the unit will switch to this profile when started. Profiles must
-	// already be loaded in the kernel, or the unit will fail. This result in a non operation if AppArmor is not enabled. If prefixed
-	// by "-", all errors will be ignored. This does not affect commands prefixed with "+".
+	// already be loaded in the kernel, or the unit will fail. If prefixed by "-", all errors will be ignored. This setting has no
+	// effect if AppArmor is not enabled. This setting does not affect commands prefixed with "+".
 	AppArmorProfile systemdconf.Value
 
 	// Takes a SMACK64 security label as argument. The process executed by the unit will be started under this label and SMACK will
@@ -282,7 +422,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -294,15 +434,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -330,7 +476,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -342,15 +488,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -378,7 +530,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -390,15 +542,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -426,7 +584,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -438,15 +596,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -474,7 +638,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -486,15 +650,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -522,7 +692,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -534,15 +704,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -570,7 +746,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -582,15 +758,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -618,7 +800,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -630,15 +812,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -666,7 +854,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -678,15 +866,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -714,7 +908,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -726,15 +920,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -762,7 +962,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -774,15 +974,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -810,7 +1016,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -822,15 +1028,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -858,7 +1070,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -870,15 +1082,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -906,7 +1124,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -918,15 +1136,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -954,7 +1178,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -966,15 +1190,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -1002,7 +1232,7 @@ type ExecOptions struct {
 	// Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value,
 	// or as colon-separated pair soft:hard to set both limits individually (e.g. "LimitAS=4G:16G"). Use the string infinity
 	// to configure no limit on a specific resource. The multiplicative suffixes K, M, G, T, P and E (to the base 1024) may be used
-	// for resource limits measured in bytes (e.g. LimitAS=16G). For the limits referring to time values, the usual time units
+	// for resource limits measured in bytes (e.g. "LimitAS=16G"). For the limits referring to time values, the usual time units
 	// ms, s, min, h and so on may be used (see systemd.time for details). Note that if no time unit is specified for LimitCPU= the
 	// default unit of seconds is implied, while for LimitRTTIME= the default unit of microseconds is implied. Also, note that
 	// the effective granularity of the limits might influence their enforcement. For example, time limits specified for LimitCPU=
@@ -1014,15 +1244,21 @@ type ExecOptions struct {
 	// to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set.
 	// Also note that LimitRSS= is not implemented on Linux, and setting it has no effect. Often it is advisable to prefer the resource
 	// controls listed in systemd.resource-control over these per-process limits, as they apply to services as a whole, may
-	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryLimit= is a more powerful (and
+	// be altered dynamically at runtime, and are generally more expressive. For example, MemoryMax= is a more powerful (and
 	// working) replacement for LimitRSS=.
-	//
-	// For system units these resource limits may be chosen freely. For user units however (i.e. units run by a per-user instance
-	// of systemd), these limits are bound by (possibly more restrictive) per-user limits enforced by the OS.
 	//
 	// Resource limits not configured explicitly for a unit default to the value configured in the various DefaultLimitCPU=,
 	// DefaultLimitFSIZE=, … options available in systemd-system.conf, and – if not configured there – the kernel or per-user
-	// defaults, as defined by the OS (the latter only for user services, see above).
+	// defaults, as defined by the OS (the latter only for user services, see below).
+	//
+	// For system units these resource limits may be chosen freely. When these settings are configured in a user service (i.e.
+	// a service run by the per-user instance of the service manager) they cannot be used to raise the limits above those set for
+	// the user manager itself when it was first invoked, as the user's service manager generally lacks the privileges to do so.
+	// In user context these configuration options are hence only useful to lower the limits passed in or to raise the soft limit
+	// to the maximum of the hard limit as configured for the user. To raise the user's limits further, the available configuration
+	// mechanisms differ between operating systems, but typically require privileges. In most cases it is possible to configure
+	// higher per-user resource limits via PAM or by setting limits on the system service encapsulating the user's service manager,
+	// i.e. the user's instance of user@.service. After making such changes, make sure to restart the user's service manager.
 	//
 	// 	+------------------+-------------------+----------------------------+
 	// 	|    DIRECTIVE     | ULIMIT EQUIVALENT |            UNIT            |
@@ -1046,8 +1282,23 @@ type ExecOptions struct {
 	// 	+------------------+-------------------+----------------------------+
 	LimitRTTIME systemdconf.Value
 
-	// Controls the file mode creation mask. Takes an access mode in octal notation. See umask for details. Defaults to 0022.
+	// Controls the file mode creation mask. Takes an access mode in octal notation. See umask for details. Defaults to 0022 for
+	// system units. For user units the default value is inherited from the per-user service manager (whose default is in turn
+	// inherited from the system service manager, and thus typically also is 0022 — unless overridden by a PAM module). In order
+	// to change the per-user mask for all user services, consider setting the UMask= setting of the user's user@.service system
+	// service instance. The per-user umask may also be set via the umask field of a user's JSON User Record (for users managed by
+	// systemd-homed.service this field may be controlled via homectl --umask=). It may also be set via a PAM module, such as pam_umask.
 	UMask systemdconf.Value
+
+	// Controls which types of memory mappings will be saved if the process dumps core (using the /proc/pid/coredump_filter
+	// file). Takes a whitespace-separated combination of mapping type names or numbers (with the default base 16). Mapping
+	// type names are private-anonymous, shared-anonymous, private-file-backed, shared-file-backed, elf-headers, private-huge,
+	// shared-huge, private-dax, shared-dax, and the special values all (all types) and default (the kernel default of "private-anonymous
+	// shared-anonymous elf-headers private-huge"). See core for the meaning of the mapping types. When specified multiple
+	// times, all specified masks are ORed. When not set, or if the empty value is assigned, the inherited value is not changed.
+	//
+	// 	CoredumpFilter=default private-dax shared-dax
+	CoredumpFilter systemdconf.Value
 
 	// Controls how the kernel session keyring is set up for the service (see session-keyring for details on the session keyring).
 	// Takes one of inherit, private, shared. If set to inherit no special keyring setup is done, and the kernel's default behaviour
@@ -1101,23 +1352,25 @@ type ExecOptions struct {
 	CPUSchedulingPriority systemdconf.Value
 
 	// Takes a boolean argument. If true, elevated CPU scheduling priorities and policies will be reset when the executed processes
-	// fork, and can hence not leak into child processes. See sched_setscheduler for details. Defaults to false.
+	// call fork, and can hence not leak into child processes. See sched_setscheduler for details. Defaults to false.
 	CPUSchedulingResetOnFork systemdconf.Value
 
 	// Controls the CPU affinity of the executed processes. Takes a list of CPU indices or ranges separated by either whitespace
-	// or commas. CPU ranges are specified by the lower and upper CPU indices separated by a dash. This option may be specified more
-	// than once, in which case the specified CPU affinity masks are merged. If the empty string is assigned, the mask is reset,
-	// all assignments prior to this will have no effect. See sched_setaffinity for details.
+	// or commas. Alternatively, takes a special "numa" value in which case systemd automatically derives allowed CPU range
+	// based on the value of NUMAMask= option. CPU ranges are specified by the lower and upper CPU indices separated by a dash. This
+	// option may be specified more than once, in which case the specified CPU affinity masks are merged. If the empty string is
+	// assigned, the mask is reset, all assignments prior to this will have no effect. See sched_setaffinity for details.
 	CPUAffinity systemdconf.Value
 
 	// Controls the NUMA memory policy of the executed processes. Takes a policy type, one of: default, preferred, bind, interleave
 	// and local. A list of NUMA nodes that should be associated with the policy must be specified in NUMAMask=. For more details
-	// on each policy please see, set_mempolicy. For overall overview of NUMA support in Linux see, numa
+	// on each policy please see, set_mempolicy. For overall overview of NUMA support in Linux see, numa.
 	NUMAPolicy systemdconf.Value
 
 	// Controls the NUMA node list which will be applied alongside with selected NUMA policy. Takes a list of NUMA nodes and has
-	// the same syntax as a list of CPUs for CPUAffinity= option. Note that the list of NUMA nodes is not required for default and
-	// local policies and for preferred policy we expect a single NUMA node.
+	// the same syntax as a list of CPUs for CPUAffinity= option or special "all" value which will include all available NUMA nodes
+	// in the mask. Note that the list of NUMA nodes is not required for default and local policies and for preferred policy we expect
+	// a single NUMA node.
 	NUMAMask systemdconf.Value
 
 	// Sets the I/O scheduling class for executed processes. Takes an integer between 0 and 3 or one of the strings none, realtime,
@@ -1131,19 +1384,19 @@ type ExecOptions struct {
 	// for details.
 	IOSchedulingPriority systemdconf.Value
 
-	// Takes a boolean argument or the special values "full" or "strict". If true, mounts the /usr and /boot directories read-only
-	// for processes invoked by this unit. If set to "full", the /etc directory is mounted read-only, too. If set to "strict" the
-	// entire file system hierarchy is mounted read-only, except for the API file system subtrees /dev, /proc and /sys (protect
-	// these directories using PrivateDevices=, ProtectKernelTunables=, ProtectControlGroups=). This setting ensures
-	// that any modification of the vendor-supplied operating system (and optionally its configuration, and local mounts)
-	// is prohibited for the service. It is recommended to enable this setting for all long-running services, unless they are
-	// involved with system updates or need to modify the operating system in other ways. If this option is used, ReadWritePaths=
-	// may be used to exclude specific directories from being made read-only. This setting is implied if DynamicUser= is set.
-	// This setting cannot ensure protection in all cases. In general it has the same limitations as ReadOnlyPaths=, see below.
-	// Defaults to off.
+	// Takes a boolean argument or the special values "full" or "strict". If true, mounts the /usr/ and the boot loader directories
+	// (/boot and /efi) read-only for processes invoked by this unit. If set to "full", the /etc/ directory is mounted read-only,
+	// too. If set to "strict" the entire file system hierarchy is mounted read-only, except for the API file system subtrees /dev/,
+	// /proc/ and /sys/ (protect these directories using PrivateDevices=, ProtectKernelTunables=, ProtectControlGroups=).
+	// This setting ensures that any modification of the vendor-supplied operating system (and optionally its configuration,
+	// and local mounts) is prohibited for the service. It is recommended to enable this setting for all long-running services,
+	// unless they are involved with system updates or need to modify the operating system in other ways. If this option is used,
+	// ReadWritePaths= may be used to exclude specific directories from being made read-only. This setting is implied if DynamicUser=
+	// is set. This setting cannot ensure protection in all cases. In general it has the same limitations as ReadOnlyPaths=, see
+	// below. Defaults to off.
 	ProtectSystem systemdconf.Value
 
-	// Takes a boolean argument or the special values "read-only" or "tmpfs". If true, the directories /home, /root, and /run/user
+	// Takes a boolean argument or the special values "read-only" or "tmpfs". If true, the directories /home/, /root, and /run/user
 	// are made inaccessible and empty for processes invoked by this unit. If set to "read-only", the three directories are made
 	// read-only instead. If set to "tmpfs", temporary file systems are mounted on the three directories in read-only mode. The
 	// value "tmpfs" is useful to hide home directories not relevant to the processes invoked by the unit, while still allowing
@@ -1162,10 +1415,10 @@ type ExecOptions struct {
 	ProtectHome systemdconf.Value
 
 	// These options take a whitespace-separated list of directory names. The specified directory names must be relative, and
-	// may not include "..". If set, one or more directories by the specified names will be created (including their parents) below
-	// the locations defined in the following table, when the unit is started. Also, the corresponding environment variable
-	// is defined with the full path of directories. If multiple directories are set, then in the environment variable the paths
-	// are concatenated with colon (":").
+	// may not include "..". If set, when the unit is started, one or more directories by the specified names will be created (including
+	// their parents) below the locations defined in the following table. Also, the corresponding environment variable will
+	// be defined with the full paths of the directories. If multiple directories are set, then in the environment variable the
+	// paths are concatenated with colon (":").
 	//
 	// 	+-------------------------+-----------------------------+---------------------------+--------------------------+
 	// 	|        DIRECTORY        | BELOW PATH FOR SYSTEM UNITS | BELOW PATH FOR USER UNITS | ENVIRONMENT VARIABLE SET |
@@ -1193,19 +1446,19 @@ type ExecOptions struct {
 	// These options imply BindPaths= for the specified paths. When combined with RootDirectory= or RootImage= these paths
 	// always reside on the host and are mounted from there into the unit's file system namespace.
 	//
-	// If DynamicUser= is used in conjunction with StateDirectory=, CacheDirectory= and LogsDirectory= is slightly altered:
-	// the directories are created below /var/lib/private, /var/cache/private and /var/log/private, respectively, which
-	// are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot
+	// If DynamicUser= is used in conjunction with StateDirectory=, the logic for CacheDirectory= and LogsDirectory= is slightly
+	// altered: the directories are created below /var/lib/private, /var/cache/private and /var/log/private, respectively,
+	// which are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot
 	// be gained through dynamic user ID recycling. Symbolic links are created to hide this difference in behaviour. Both from
 	// perspective of the host and from inside the unit, the relevant directories hence always appear directly below /var/lib,
 	// /var/cache and /var/log.
 	//
 	// Use RuntimeDirectory= to manage one or more runtime directories for the unit and bind their lifetime to the daemon runtime.
-	// This is particularly useful for unprivileged daemons that cannot create runtime directories in /run due to lack of privileges,
+	// This is particularly useful for unprivileged daemons that cannot create runtime directories in /run/ due to lack of privileges,
 	// and to make sure the runtime directory is cleaned up automatically after use. For runtime directories that require more
 	// complex or different configuration or lifetime guarantees, please consider using tmpfiles.d.
 	//
-	// The directories defined by these options are always created under the standard paths used by systemd (/var, /run, /etc,
+	// The directories defined by these options are always created under the standard paths used by systemd (/var/, /run/, /etc/,
 	// …). If the service needs directories in a different location, a different mechanism has to be used to create them.
 	//
 	// tmpfiles.d provides functionality that overlaps with these options. Using these options is recommended, because the
@@ -1231,10 +1484,10 @@ type ExecOptions struct {
 	RuntimeDirectory systemdconf.Value
 
 	// These options take a whitespace-separated list of directory names. The specified directory names must be relative, and
-	// may not include "..". If set, one or more directories by the specified names will be created (including their parents) below
-	// the locations defined in the following table, when the unit is started. Also, the corresponding environment variable
-	// is defined with the full path of directories. If multiple directories are set, then in the environment variable the paths
-	// are concatenated with colon (":").
+	// may not include "..". If set, when the unit is started, one or more directories by the specified names will be created (including
+	// their parents) below the locations defined in the following table. Also, the corresponding environment variable will
+	// be defined with the full paths of the directories. If multiple directories are set, then in the environment variable the
+	// paths are concatenated with colon (":").
 	//
 	// 	+-------------------------+-----------------------------+---------------------------+--------------------------+
 	// 	|        DIRECTORY        | BELOW PATH FOR SYSTEM UNITS | BELOW PATH FOR USER UNITS | ENVIRONMENT VARIABLE SET |
@@ -1262,19 +1515,19 @@ type ExecOptions struct {
 	// These options imply BindPaths= for the specified paths. When combined with RootDirectory= or RootImage= these paths
 	// always reside on the host and are mounted from there into the unit's file system namespace.
 	//
-	// If DynamicUser= is used in conjunction with StateDirectory=, CacheDirectory= and LogsDirectory= is slightly altered:
-	// the directories are created below /var/lib/private, /var/cache/private and /var/log/private, respectively, which
-	// are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot
+	// If DynamicUser= is used in conjunction with StateDirectory=, the logic for CacheDirectory= and LogsDirectory= is slightly
+	// altered: the directories are created below /var/lib/private, /var/cache/private and /var/log/private, respectively,
+	// which are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot
 	// be gained through dynamic user ID recycling. Symbolic links are created to hide this difference in behaviour. Both from
 	// perspective of the host and from inside the unit, the relevant directories hence always appear directly below /var/lib,
 	// /var/cache and /var/log.
 	//
 	// Use RuntimeDirectory= to manage one or more runtime directories for the unit and bind their lifetime to the daemon runtime.
-	// This is particularly useful for unprivileged daemons that cannot create runtime directories in /run due to lack of privileges,
+	// This is particularly useful for unprivileged daemons that cannot create runtime directories in /run/ due to lack of privileges,
 	// and to make sure the runtime directory is cleaned up automatically after use. For runtime directories that require more
 	// complex or different configuration or lifetime guarantees, please consider using tmpfiles.d.
 	//
-	// The directories defined by these options are always created under the standard paths used by systemd (/var, /run, /etc,
+	// The directories defined by these options are always created under the standard paths used by systemd (/var/, /run/, /etc/,
 	// …). If the service needs directories in a different location, a different mechanism has to be used to create them.
 	//
 	// tmpfiles.d provides functionality that overlaps with these options. Using these options is recommended, because the
@@ -1300,10 +1553,10 @@ type ExecOptions struct {
 	StateDirectory systemdconf.Value
 
 	// These options take a whitespace-separated list of directory names. The specified directory names must be relative, and
-	// may not include "..". If set, one or more directories by the specified names will be created (including their parents) below
-	// the locations defined in the following table, when the unit is started. Also, the corresponding environment variable
-	// is defined with the full path of directories. If multiple directories are set, then in the environment variable the paths
-	// are concatenated with colon (":").
+	// may not include "..". If set, when the unit is started, one or more directories by the specified names will be created (including
+	// their parents) below the locations defined in the following table. Also, the corresponding environment variable will
+	// be defined with the full paths of the directories. If multiple directories are set, then in the environment variable the
+	// paths are concatenated with colon (":").
 	//
 	// 	+-------------------------+-----------------------------+---------------------------+--------------------------+
 	// 	|        DIRECTORY        | BELOW PATH FOR SYSTEM UNITS | BELOW PATH FOR USER UNITS | ENVIRONMENT VARIABLE SET |
@@ -1331,19 +1584,19 @@ type ExecOptions struct {
 	// These options imply BindPaths= for the specified paths. When combined with RootDirectory= or RootImage= these paths
 	// always reside on the host and are mounted from there into the unit's file system namespace.
 	//
-	// If DynamicUser= is used in conjunction with StateDirectory=, CacheDirectory= and LogsDirectory= is slightly altered:
-	// the directories are created below /var/lib/private, /var/cache/private and /var/log/private, respectively, which
-	// are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot
+	// If DynamicUser= is used in conjunction with StateDirectory=, the logic for CacheDirectory= and LogsDirectory= is slightly
+	// altered: the directories are created below /var/lib/private, /var/cache/private and /var/log/private, respectively,
+	// which are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot
 	// be gained through dynamic user ID recycling. Symbolic links are created to hide this difference in behaviour. Both from
 	// perspective of the host and from inside the unit, the relevant directories hence always appear directly below /var/lib,
 	// /var/cache and /var/log.
 	//
 	// Use RuntimeDirectory= to manage one or more runtime directories for the unit and bind their lifetime to the daemon runtime.
-	// This is particularly useful for unprivileged daemons that cannot create runtime directories in /run due to lack of privileges,
+	// This is particularly useful for unprivileged daemons that cannot create runtime directories in /run/ due to lack of privileges,
 	// and to make sure the runtime directory is cleaned up automatically after use. For runtime directories that require more
 	// complex or different configuration or lifetime guarantees, please consider using tmpfiles.d.
 	//
-	// The directories defined by these options are always created under the standard paths used by systemd (/var, /run, /etc,
+	// The directories defined by these options are always created under the standard paths used by systemd (/var/, /run/, /etc/,
 	// …). If the service needs directories in a different location, a different mechanism has to be used to create them.
 	//
 	// tmpfiles.d provides functionality that overlaps with these options. Using these options is recommended, because the
@@ -1369,10 +1622,10 @@ type ExecOptions struct {
 	CacheDirectory systemdconf.Value
 
 	// These options take a whitespace-separated list of directory names. The specified directory names must be relative, and
-	// may not include "..". If set, one or more directories by the specified names will be created (including their parents) below
-	// the locations defined in the following table, when the unit is started. Also, the corresponding environment variable
-	// is defined with the full path of directories. If multiple directories are set, then in the environment variable the paths
-	// are concatenated with colon (":").
+	// may not include "..". If set, when the unit is started, one or more directories by the specified names will be created (including
+	// their parents) below the locations defined in the following table. Also, the corresponding environment variable will
+	// be defined with the full paths of the directories. If multiple directories are set, then in the environment variable the
+	// paths are concatenated with colon (":").
 	//
 	// 	+-------------------------+-----------------------------+---------------------------+--------------------------+
 	// 	|        DIRECTORY        | BELOW PATH FOR SYSTEM UNITS | BELOW PATH FOR USER UNITS | ENVIRONMENT VARIABLE SET |
@@ -1400,19 +1653,19 @@ type ExecOptions struct {
 	// These options imply BindPaths= for the specified paths. When combined with RootDirectory= or RootImage= these paths
 	// always reside on the host and are mounted from there into the unit's file system namespace.
 	//
-	// If DynamicUser= is used in conjunction with StateDirectory=, CacheDirectory= and LogsDirectory= is slightly altered:
-	// the directories are created below /var/lib/private, /var/cache/private and /var/log/private, respectively, which
-	// are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot
+	// If DynamicUser= is used in conjunction with StateDirectory=, the logic for CacheDirectory= and LogsDirectory= is slightly
+	// altered: the directories are created below /var/lib/private, /var/cache/private and /var/log/private, respectively,
+	// which are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot
 	// be gained through dynamic user ID recycling. Symbolic links are created to hide this difference in behaviour. Both from
 	// perspective of the host and from inside the unit, the relevant directories hence always appear directly below /var/lib,
 	// /var/cache and /var/log.
 	//
 	// Use RuntimeDirectory= to manage one or more runtime directories for the unit and bind their lifetime to the daemon runtime.
-	// This is particularly useful for unprivileged daemons that cannot create runtime directories in /run due to lack of privileges,
+	// This is particularly useful for unprivileged daemons that cannot create runtime directories in /run/ due to lack of privileges,
 	// and to make sure the runtime directory is cleaned up automatically after use. For runtime directories that require more
 	// complex or different configuration or lifetime guarantees, please consider using tmpfiles.d.
 	//
-	// The directories defined by these options are always created under the standard paths used by systemd (/var, /run, /etc,
+	// The directories defined by these options are always created under the standard paths used by systemd (/var/, /run/, /etc/,
 	// …). If the service needs directories in a different location, a different mechanism has to be used to create them.
 	//
 	// tmpfiles.d provides functionality that overlaps with these options. Using these options is recommended, because the
@@ -1438,10 +1691,10 @@ type ExecOptions struct {
 	LogsDirectory systemdconf.Value
 
 	// These options take a whitespace-separated list of directory names. The specified directory names must be relative, and
-	// may not include "..". If set, one or more directories by the specified names will be created (including their parents) below
-	// the locations defined in the following table, when the unit is started. Also, the corresponding environment variable
-	// is defined with the full path of directories. If multiple directories are set, then in the environment variable the paths
-	// are concatenated with colon (":").
+	// may not include "..". If set, when the unit is started, one or more directories by the specified names will be created (including
+	// their parents) below the locations defined in the following table. Also, the corresponding environment variable will
+	// be defined with the full paths of the directories. If multiple directories are set, then in the environment variable the
+	// paths are concatenated with colon (":").
 	//
 	// 	+-------------------------+-----------------------------+---------------------------+--------------------------+
 	// 	|        DIRECTORY        | BELOW PATH FOR SYSTEM UNITS | BELOW PATH FOR USER UNITS | ENVIRONMENT VARIABLE SET |
@@ -1469,19 +1722,19 @@ type ExecOptions struct {
 	// These options imply BindPaths= for the specified paths. When combined with RootDirectory= or RootImage= these paths
 	// always reside on the host and are mounted from there into the unit's file system namespace.
 	//
-	// If DynamicUser= is used in conjunction with StateDirectory=, CacheDirectory= and LogsDirectory= is slightly altered:
-	// the directories are created below /var/lib/private, /var/cache/private and /var/log/private, respectively, which
-	// are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot
+	// If DynamicUser= is used in conjunction with StateDirectory=, the logic for CacheDirectory= and LogsDirectory= is slightly
+	// altered: the directories are created below /var/lib/private, /var/cache/private and /var/log/private, respectively,
+	// which are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot
 	// be gained through dynamic user ID recycling. Symbolic links are created to hide this difference in behaviour. Both from
 	// perspective of the host and from inside the unit, the relevant directories hence always appear directly below /var/lib,
 	// /var/cache and /var/log.
 	//
 	// Use RuntimeDirectory= to manage one or more runtime directories for the unit and bind their lifetime to the daemon runtime.
-	// This is particularly useful for unprivileged daemons that cannot create runtime directories in /run due to lack of privileges,
+	// This is particularly useful for unprivileged daemons that cannot create runtime directories in /run/ due to lack of privileges,
 	// and to make sure the runtime directory is cleaned up automatically after use. For runtime directories that require more
 	// complex or different configuration or lifetime guarantees, please consider using tmpfiles.d.
 	//
-	// The directories defined by these options are always created under the standard paths used by systemd (/var, /run, /etc,
+	// The directories defined by these options are always created under the standard paths used by systemd (/var/, /run/, /etc/,
 	// …). If the service needs directories in a different location, a different mechanism has to be used to create them.
 	//
 	// tmpfiles.d provides functionality that overlaps with these options. Using these options is recommended, because the
@@ -1535,24 +1788,24 @@ type ExecOptions struct {
 	// removed when the service stops. If set to restart the directories are preserved when the service is both automatically
 	// and manually restarted. Here, the automatic restart means the operation specified in Restart=, and manual restart means
 	// the one triggered by systemctl restart foo.service. If set to yes, then the directories are not removed when the service
-	// is stopped. Note that since the runtime directory /run is a mount point of "tmpfs", then for system services the directories
+	// is stopped. Note that since the runtime directory /run/ is a mount point of "tmpfs", then for system services the directories
 	// specified in RuntimeDirectory= are removed when the system is rebooted.
 	RuntimeDirectoryPreserve systemdconf.Value
 
 	// Configures a timeout on the clean-up operation requested through systemctl clean …, see systemctl for details. Takes
-	// the usual time values and defaults to infinity, i.e. by default no time-out is applied. If a time-out is configured the clean
-	// operation will be aborted forcibly when the time-out is reached, potentially leaving resources on disk.
+	// the usual time values and defaults to infinity, i.e. by default no timeout is applied. If a timeout is configured the clean
+	// operation will be aborted forcibly when the timeout is reached, potentially leaving resources on disk.
 	TimeoutCleanSec systemdconf.Value
 
-	// Sets up a new file system namespace for executed processes. These options may be used to limit access a process might have
-	// to the file system hierarchy. Each setting takes a space-separated list of paths relative to the host's root directory
-	// (i.e. the system running the service manager). Note that if paths contain symlinks, they are resolved relative to the root
-	// directory set with RootDirectory=/RootImage=.
+	// Sets up a new file system namespace for executed processes. These options may be used to limit access a process has to the
+	// file system. Each setting takes a space-separated list of paths relative to the host's root directory (i.e. the system
+	// running the service manager). Note that if paths contain symlinks, they are resolved relative to the root directory set
+	// with RootDirectory=/RootImage=.
 	//
 	// Paths listed in ReadWritePaths= are accessible from within the namespace with the same access modes as from outside of
 	// it. Paths listed in ReadOnlyPaths= are accessible for reading only, writing will be refused even if the usual file access
 	// controls would permit this. Nest ReadWritePaths= inside of ReadOnlyPaths= in order to provide writable subdirectories
-	// within read-only directories. Use ReadWritePaths= in order to whitelist specific paths for write access if ProtectSystem=strict
+	// within read-only directories. Use ReadWritePaths= in order to allow-list specific paths for write access if ProtectSystem=strict
 	// is used.
 	//
 	// Paths listed in InaccessiblePaths= will be made inaccessible for processes inside the namespace along with everything
@@ -1584,15 +1837,15 @@ type ExecOptions struct {
 	// of the service manager.
 	ReadWritePaths systemdconf.Value
 
-	// Sets up a new file system namespace for executed processes. These options may be used to limit access a process might have
-	// to the file system hierarchy. Each setting takes a space-separated list of paths relative to the host's root directory
-	// (i.e. the system running the service manager). Note that if paths contain symlinks, they are resolved relative to the root
-	// directory set with RootDirectory=/RootImage=.
+	// Sets up a new file system namespace for executed processes. These options may be used to limit access a process has to the
+	// file system. Each setting takes a space-separated list of paths relative to the host's root directory (i.e. the system
+	// running the service manager). Note that if paths contain symlinks, they are resolved relative to the root directory set
+	// with RootDirectory=/RootImage=.
 	//
 	// Paths listed in ReadWritePaths= are accessible from within the namespace with the same access modes as from outside of
 	// it. Paths listed in ReadOnlyPaths= are accessible for reading only, writing will be refused even if the usual file access
 	// controls would permit this. Nest ReadWritePaths= inside of ReadOnlyPaths= in order to provide writable subdirectories
-	// within read-only directories. Use ReadWritePaths= in order to whitelist specific paths for write access if ProtectSystem=strict
+	// within read-only directories. Use ReadWritePaths= in order to allow-list specific paths for write access if ProtectSystem=strict
 	// is used.
 	//
 	// Paths listed in InaccessiblePaths= will be made inaccessible for processes inside the namespace along with everything
@@ -1624,15 +1877,15 @@ type ExecOptions struct {
 	// of the service manager.
 	ReadOnlyPaths systemdconf.Value
 
-	// Sets up a new file system namespace for executed processes. These options may be used to limit access a process might have
-	// to the file system hierarchy. Each setting takes a space-separated list of paths relative to the host's root directory
-	// (i.e. the system running the service manager). Note that if paths contain symlinks, they are resolved relative to the root
-	// directory set with RootDirectory=/RootImage=.
+	// Sets up a new file system namespace for executed processes. These options may be used to limit access a process has to the
+	// file system. Each setting takes a space-separated list of paths relative to the host's root directory (i.e. the system
+	// running the service manager). Note that if paths contain symlinks, they are resolved relative to the root directory set
+	// with RootDirectory=/RootImage=.
 	//
 	// Paths listed in ReadWritePaths= are accessible from within the namespace with the same access modes as from outside of
 	// it. Paths listed in ReadOnlyPaths= are accessible for reading only, writing will be refused even if the usual file access
 	// controls would permit this. Nest ReadWritePaths= inside of ReadOnlyPaths= in order to provide writable subdirectories
-	// within read-only directories. Use ReadWritePaths= in order to whitelist specific paths for write access if ProtectSystem=strict
+	// within read-only directories. Use ReadWritePaths= in order to allow-list specific paths for write access if ProtectSystem=strict
 	// is used.
 	//
 	// Paths listed in InaccessiblePaths= will be made inaccessible for processes inside the namespace along with everything
@@ -1678,22 +1931,22 @@ type ExecOptions struct {
 	//
 	// 	TemporaryFileSystem=/var:ro BindReadOnlyPaths=/var/lib/systemd
 	//
-	// then the invoked processes by the unit cannot see any files or directories under /var except for /var/lib/systemd or its
+	// then the invoked processes by the unit cannot see any files or directories under /var/ except for /var/lib/systemd or its
 	// contents.
 	//
 	// This option is only available for system services and is not supported for services running in per-user instances of the
 	// service manager.
 	TemporaryFileSystem systemdconf.Value
 
-	// Takes a boolean argument. If true, sets up a new file system namespace for the executed processes and mounts private /tmp
-	// and /var/tmp directories inside it that is not shared by processes outside of the namespace. This is useful to secure access
-	// to temporary files of the process, but makes sharing between processes via /tmp or /var/tmp impossible. If this is enabled,
-	// all temporary files created by a service in these directories will be removed after the service is stopped. Defaults to
-	// false. It is possible to run two or more units within the same private /tmp and /var/tmp namespace by using the JoinsNamespaceOf=
-	// directive, see systemd.unit for details. This setting is implied if DynamicUser= is set. For this setting the same restrictions
-	// regarding mount propagation and privileges apply as for ReadOnlyPaths= and related calls, see above. Enabling this setting
-	// has the side effect of adding Requires= and After= dependencies on all mount units necessary to access /tmp and /var/tmp.
-	// Moreover an implicitly After= ordering on systemd-tmpfiles-setup.service is added.
+	// Takes a boolean argument. If true, sets up a new file system namespace for the executed processes and mounts private /tmp/
+	// and /var/tmp/ directories inside it that are not shared by processes outside of the namespace. This is useful to secure
+	// access to temporary files of the process, but makes sharing between processes via /tmp/ or /var/tmp/ impossible. If this
+	// is enabled, all temporary files created by a service in these directories will be removed after the service is stopped.
+	// Defaults to false. It is possible to run two or more units within the same private /tmp/ and /var/tmp/ namespace by using
+	// the JoinsNamespaceOf= directive, see systemd.unit for details. This setting is implied if DynamicUser= is set. For this
+	// setting the same restrictions regarding mount propagation and privileges apply as for ReadOnlyPaths= and related calls,
+	// see above. Enabling this setting has the side effect of adding Requires= and After= dependencies on all mount units necessary
+	// to access /tmp/ and /var/tmp/. Moreover an implicitly After= ordering on systemd-tmpfiles-setup.service is added.
 	//
 	// Note that the implementation of this setting might be impossible (for example if mount namespaces are not available),
 	// and the unit should be written in a way that does not solely rely on this setting for security.
@@ -1702,7 +1955,7 @@ type ExecOptions struct {
 	// service manager.
 	PrivateTmp systemdconf.Value
 
-	// Takes a boolean argument. If true, sets up a new /dev mount for the executed processes and only adds API pseudo devices such
+	// Takes a boolean argument. If true, sets up a new /dev/ mount for the executed processes and only adds API pseudo devices such
 	// as /dev/null, /dev/zero or /dev/random (as well as the pseudo TTY subsystem) to it, but no physical devices such as /dev/sda,
 	// system memory /dev/mem, system ports /dev/port and others. This is useful to securely turn off physical device access
 	// by the executed process. Defaults to false. Enabling this option will install a system call filter to block low-level I/O
@@ -1710,7 +1963,7 @@ type ExecOptions struct {
 	// set for the unit (see above), and set DevicePolicy=closed (see systemd.resource-control for details). Note that using
 	// this setting will disconnect propagation of mounts from the service to the host (propagation in the opposite direction
 	// continues to work). This means that this setting may not be used for services which shall be able to install mount points
-	// in the main mount namespace. The new /dev will be mounted read-only and 'noexec'. The latter may break old programs which
+	// in the main mount namespace. The new /dev/ will be mounted read-only and 'noexec'. The latter may break old programs which
 	// try to set up executable memory by using mmap of /dev/zero instead of using MAP_ANON. For this setting the same restrictions
 	// regarding mount propagation and privileges apply as for ReadOnlyPaths= and related calls, see above. If turned on and
 	// if running in user mode, or in system mode, but without the CAP_SYS_ADMIN capability (e.g. setting User=), NoNewPrivileges=yes
@@ -1767,15 +2020,17 @@ type ExecOptions struct {
 	// Settings such as CapabilityBoundingSet= will affect only the latter, and there's no way to acquire additional capabilities
 	// in the host's user namespace. Defaults to off.
 	//
+	// When this setting is set up by a per-user instance of the service manager, the mapping of the "root" user and group to itself
+	// is omitted (unless the user manager is root). Additionally, in the per-user instance manager case, the user namespace
+	// will be set up before most other namespaces. This means that combining PrivateUsers=true with other namespaces will enable
+	// use of features not normally supported by the per-user instances of the service manager.
+	//
 	// This setting is particularly useful in conjunction with RootDirectory=/RootImage=, as the need to synchronize the user
 	// and group databases in the root directory and on the host is reduced, as the only users and groups who need to be matched are
 	// "root", "nobody" and the unit's own user and group.
 	//
 	// Note that the implementation of this setting might be impossible (for example if user namespaces are not available), and
 	// the unit should be written in a way that does not solely rely on this setting for security.
-	//
-	// This option is only available for system services and is not supported for services running in per-user instances of the
-	// service manager.
 	PrivateUsers systemdconf.Value
 
 	// Takes a boolean argument. When set, sets up a new UTS namespace for the executed processes. In addition, changing hostname
@@ -1791,7 +2046,17 @@ type ExecOptions struct {
 	// service manager.
 	ProtectHostname systemdconf.Value
 
-	// Takes a boolean argument. If true, kernel variables accessible through /proc/sys, /sys, /proc/sysrq-trigger, /proc/latency_stats,
+	// Takes a boolean argument. If set, writes to the hardware clock or system clock will be denied. It is recommended to turn this
+	// on for most services that do not need modify the clock. Defaults to off. Enabling this option removes CAP_SYS_TIME and CAP_WAKE_ALARM
+	// from the capability bounding set for this unit, installs a system call filter to block calls that can set the clock, and DeviceAllow=char-rtc
+	// r is implied. This ensures /dev/rtc0, /dev/rtc1, etc. are made read-only to the service. See systemd.resource-control
+	// for the details about DeviceAllow=.
+	//
+	// This option is only available for system services and is not supported for services running in per-user instances of the
+	// service manager.
+	ProtectClock systemdconf.Value
+
+	// Takes a boolean argument. If true, kernel variables accessible through /proc/sys/, /sys/, /proc/sysrq-trigger, /proc/latency_stats,
 	// /proc/acpi, /proc/timer_stats, /proc/fs and /proc/irq will be made read-only to all processes of the unit. Usually,
 	// tunable kernel variables should be initialized only at boot-time, for example with the sysctl.d mechanism. Few services
 	// need to write to these at runtime; it is hence recommended to turn this on for most services. For this setting the same restrictions
@@ -1830,7 +2095,7 @@ type ExecOptions struct {
 	// service manager.
 	ProtectKernelLogs systemdconf.Value
 
-	// Takes a boolean argument. If true, the Linux Control Groups (cgroups) hierarchies accessible through /sys/fs/cgroup
+	// Takes a boolean argument. If true, the Linux Control Groups (cgroups) hierarchies accessible through /sys/fs/cgroup/
 	// will be made read-only to all processes of the unit. Except for container managers no services should require write access
 	// to the control groups hierarchies; it is hence recommended to turn this on for most services. For this setting the same restrictions
 	// regarding mount propagation and privileges apply as for ReadOnlyPaths= and related calls, see above. Defaults to off.
@@ -1841,11 +2106,11 @@ type ExecOptions struct {
 	ProtectControlGroups systemdconf.Value
 
 	// Restricts the set of socket address families accessible to the processes of this unit. Takes a space-separated list of
-	// address family names to whitelist, such as AF_UNIX, AF_INET or AF_INET6. When prefixed with ~ the listed address families
-	// will be applied as blacklist, otherwise as whitelist. Note that this restricts access to the socket system call only. Sockets
+	// address family names to allow-list, such as AF_UNIX, AF_INET or AF_INET6. When prefixed with ~ the listed address families
+	// will be applied as deny list, otherwise as allow list. Note that this restricts access to the socket system call only. Sockets
 	// passed into the process by other means (for example, by using socket activation with socket units, see systemd.socket)
 	// are unaffected. Also, sockets created with socketpair() (which creates connected AF_UNIX sockets only) are unaffected.
-	// Note that this option has no effect on 32-bit x86, s390, s390x, mips, mips-le, ppc, ppc-le, pcc64, ppc64-le and is ignored
+	// Note that this option has no effect on 32-bit x86, s390, s390x, mips, mips-le, ppc, ppc-le, ppc64, ppc64-le and is ignored
 	// (but works correctly on other ABIs, including x86-64). Note that on systems supporting multiple ABIs (such as x86/x86-64)
 	// it is recommended to turn off alternative ABIs for services, so that they cannot be used to circumvent the restrictions
 	// of this option. Specifically, it is recommended to combine this option with SystemCallArchitectures=native or similar.
@@ -1855,8 +2120,8 @@ type ExecOptions struct {
 	// "+".
 	//
 	// Use this option to limit exposure of processes to remote access, in particular via exotic and sensitive network protocols,
-	// such as AF_PACKET. Note that in most cases, the local AF_UNIX address family should be included in the configured whitelist
-	// as it is frequently used for local communication, including for syslog logging.
+	// such as AF_PACKET. Note that in most cases, the local AF_UNIX address family should be included in the configured allow
+	// list as it is frequently used for local communication, including for syslog logging.
 	RestrictAddressFamilies systemdconf.Value
 
 	// Restricts access to Linux namespace functionality for the processes of this unit. For details about Linux namespaces,
@@ -1864,16 +2129,17 @@ type ExecOptions struct {
 	// default), no restrictions on namespace creation and switching are made. If true, access to any kind of namespacing is prohibited.
 	// Otherwise, a space-separated list of namespace type identifiers must be specified, consisting of any combination of:
 	// cgroup, ipc, net, mnt, pid, user and uts. Any namespace type listed is made accessible to the unit's processes, access to
-	// namespace types not listed is prohibited (whitelisting). By prepending the list with a single tilde character ("~") the
-	// effect may be inverted: only the listed namespace types will be made inaccessible, all unlisted ones are permitted (blacklisting).
-	// If the empty string is assigned, the default namespace restrictions are applied, which is equivalent to false. This option
-	// may appear more than once, in which case the namespace types are merged by OR, or by AND if the lines are prefixed with "~" (see
-	// examples below). Internally, this setting limits access to the unshare, clone and setns system calls, taking the specified
-	// flags parameters into account. Note that — if this option is used — in addition to restricting creation and switching of
-	// the specified types of namespaces (or all of them, if true) access to the setns() system call with a zero flags parameter
-	// is prohibited. This setting is only supported on x86, x86-64, mips, mips-le, mips64, mips64-le, mips64-n32, mips64-le-n32,
-	// ppc64, ppc64-le, s390 and s390x, and enforces no restrictions on other architectures. If running in user mode, or in system
-	// mode, but without the CAP_SYS_ADMIN capability (e.g. setting User=), NoNewPrivileges=yes is implied.
+	// namespace types not listed is prohibited (allow-listing). By prepending the list with a single tilde character ("~")
+	// the effect may be inverted: only the listed namespace types will be made inaccessible, all unlisted ones are permitted
+	// (deny-listing). If the empty string is assigned, the default namespace restrictions are applied, which is equivalent
+	// to false. This option may appear more than once, in which case the namespace types are merged by OR, or by AND if the lines are
+	// prefixed with "~" (see examples below). Internally, this setting limits access to the unshare, clone and setns system
+	// calls, taking the specified flags parameters into account. Note that — if this option is used — in addition to restricting
+	// creation and switching of the specified types of namespaces (or all of them, if true) access to the setns() system call with
+	// a zero flags parameter is prohibited. This setting is only supported on x86, x86-64, mips, mips-le, mips64, mips64-le,
+	// mips64-n32, mips64-le-n32, ppc64, ppc64-le, s390 and s390x, and enforces no restrictions on other architectures. If
+	// running in user mode, or in system mode, but without the CAP_SYS_ADMIN capability (e.g. setting User=), NoNewPrivileges=yes
+	// is implied.
 	//
 	// Example: if a unit has the following,
 	//
@@ -1969,14 +2235,14 @@ type ExecOptions struct {
 	// This setting only controls the final propagation setting in effect on all mount points of the file system namespace created
 	// for each process of this unit. Other file system namespacing unit settings (see the discussion in PrivateMounts= above)
 	// will implicitly disable mount and unmount propagation from the unit's processes towards the host by changing the propagation
-	// setting of all mount points in the unit's file system namepace to slave first. Setting this option to shared does not reestablish
+	// setting of all mount points in the unit's file system namespace to slave first. Setting this option to shared does not reestablish
 	// propagation in that case.
 	//
 	// If not set – but file system namespaces are enabled through another file system namespace unit setting – shared mount propagation
 	// is used, but — as mentioned — as slave is applied first, propagation from the unit's processes to the host is still turned
 	// off.
 	//
-	// It is not recommended to to use private mount propagation for units, as this means temporary mounts (such as removable media)
+	// It is not recommended to use private mount propagation for units, as this means temporary mounts (such as removable media)
 	// of the host will stay mounted and thus indefinitely busy in forked off processes, as unmount propagation events won't be
 	// received by the file system namespace of the unit.
 	//
@@ -1988,16 +2254,17 @@ type ExecOptions struct {
 	MountFlags systemdconf.Value
 
 	// Takes a space-separated list of system call names. If this setting is used, all system calls executed by the unit processes
-	// except for the listed ones will result in immediate process termination with the SIGSYS signal (whitelisting). (See SystemCallErrorNumber=
-	// below for changing the default action). If the first character of the list is "~", the effect is inverted: only the listed
-	// system calls will result in immediate process termination (blacklisting). Blacklisted system calls and system call
-	// groups may optionally be suffixed with a colon (":") and "errno" error number (between 0 and 4095) or errno name such as EPERM,
-	// EACCES or EUCLEAN (see errno for a full list). This value will be returned when a blacklisted system call is triggered, instead
-	// of terminating the processes immediately. This value takes precedence over the one given in SystemCallErrorNumber=,
-	// see below. If running in user mode, or in system mode, but without the CAP_SYS_ADMIN capability (e.g. setting User=nobody),
-	// NoNewPrivileges=yes is implied. This feature makes use of the Secure Computing Mode 2 interfaces of the kernel ('seccomp
-	// filtering') and is useful for enforcing a minimal sandboxing environment. Note that the execve, exit, exit_group, getrlimit,
-	// rt_sigreturn, sigreturn system calls and the system calls for querying time and sleeping are implicitly whitelisted
+	// except for the listed ones will result in immediate process termination with the SIGSYS signal (allow-listing). (See
+	// SystemCallErrorNumber= below for changing the default action). If the first character of the list is "~", the effect is
+	// inverted: only the listed system calls will result in immediate process termination (deny-listing). Deny-listed system
+	// calls and system call groups may optionally be suffixed with a colon (":") and "errno" error number (between 0 and 4095)
+	// or errno name such as EPERM, EACCES or EUCLEAN (see errno for a full list). This value will be returned when a deny-listed
+	// system call is triggered, instead of terminating the processes immediately. Special setting "kill" can be used to explicitly
+	// specify killing. This value takes precedence over the one given in SystemCallErrorNumber=, see below. If running in user
+	// mode, or in system mode, but without the CAP_SYS_ADMIN capability (e.g. setting User=nobody), NoNewPrivileges=yes
+	// is implied. This feature makes use of the Secure Computing Mode 2 interfaces of the kernel ('seccomp filtering') and is
+	// useful for enforcing a minimal sandboxing environment. Note that the execve(), exit(), exit_group(), getrlimit(),
+	// rt_sigreturn(), sigreturn() system calls and the system calls for querying time and sleeping are implicitly allow-listed
 	// and do not need to be listed explicitly. This option may be specified more than once, in which case the filter masks are merged.
 	// If the empty string is assigned, the filter is reset, all prior assignments will have no effect. This does not affect commands
 	// prefixed with "+".
@@ -2007,16 +2274,16 @@ type ExecOptions struct {
 	// option with SystemCallArchitectures=native or similar.
 	//
 	// Note that strict system call filters may impact execution and error handling code paths of the service invocation. Specifically,
-	// access to the execve system call is required for the execution of the service binary — if it is blocked service invocation
+	// access to the execve() system call is required for the execution of the service binary — if it is blocked service invocation
 	// will necessarily fail. Also, if execution of the service binary fails for some reason (for example: missing service executable),
 	// the error handling logic might require access to an additional set of system calls in order to process and log this failure
 	// correctly. It might be necessary to temporarily disable system call filters in order to simplify debugging of such failures.
 	//
-	// If you specify both types of this option (i.e. whitelisting and blacklisting), the first encountered will take precedence
+	// If you specify both types of this option (i.e. allow-listing and deny-listing), the first encountered will take precedence
 	// and will dictate the default action (termination or approval of a system call). Then the next occurrences of this option
 	// will add or delete the listed system calls from the set of the filtered system calls, depending of its type and the default
-	// action. (For example, if you have started with a whitelisting of read and write, and right after it add a blacklisting of
-	// write, then write will be removed from the set.)
+	// action. (For example, if you have started with an allow list rule for read() and write(), and right after it add a deny list
+	// rule for write(), then write() will be removed from the set.)
 	//
 	// As the number of possible system calls is large, predefined sets of system calls are provided. A set starts with "@" character,
 	// followed by name of the set.
@@ -2035,18 +2302,18 @@ type ExecOptions struct {
 	// 	|                 | perf_event_open and related calls)                                               |
 	// 	| @file-system    | File system operations: opening, creating files and directories for read and     |
 	// 	|                 | write, renaming and removing them, reading file properties, or creating hard and |
-	// 	|                 | symbolic links.                                                                  |
+	// 	|                 | symbolic links                                                                   |
 	// 	| @io-event       | Event loop system calls (poll, select, epoll, eventfd and related calls)         |
 	// 	| @ipc            | Pipes, SysV IPC, POSIX Message Queues and other IPC (mq_overview, svipc)         |
 	// 	| @keyring        | Kernel keyring access (keyctl and related calls)                                 |
-	// 	| @memlock        | Locking of memory into RAM (mlock, mlockall and related calls)                   |
+	// 	| @memlock        | Locking of memory in RAM (mlock, mlockall and related calls)                     |
 	// 	| @module         | Loading and unloading of kernel modules (init_module, delete_module and related  |
 	// 	|                 | calls)                                                                           |
 	// 	| @mount          | Mounting and unmounting of file systems (mount, chroot, and related calls)       |
 	// 	| @network-io     | Socket I/O (including local AF_UNIX): socket, unix                               |
 	// 	| @obsolete       | Unusual, obsolete or unimplemented (create_module, gtty, …)                      |
 	// 	| @privileged     | All system calls which need super-user capabilities (capabilities)               |
-	// 	| @process        | Process control, execution, namespaceing operations (clone, kill, namespaces, …  |
+	// 	| @process        | Process control, execution, namespacing operations (clone, kill, namespaces, …)  |
 	// 	| @raw-io         | Raw I/O port access (ioperm, iopl, pciconfig_read(), …)                          |
 	// 	| @reboot         | System calls for rebooting and reboot preparation (reboot, kexec(), …)           |
 	// 	| @resources      | System calls for changing resource limits, memory and scheduling parameters      |
@@ -2056,13 +2323,17 @@ type ExecOptions struct {
 	// 	| @signal         | System calls for manipulating and handling process signals (signal, sigprocmask, |
 	// 	|                 | …)                                                                               |
 	// 	| @swap           | System calls for enabling/disabling swap devices (swapon, swapoff)               |
-	// 	| @sync           | Synchronizing files and memory to disk: (fsync, msync, and related calls)        |
+	// 	| @sync           | Synchronizing files and memory to disk (fsync, msync, and related calls)         |
 	// 	| @system-service | A reasonable set of system calls used by common system services, excluding any   |
-	// 	|                 | special purpose calls. This is the recommended starting point for whitelisting   |
+	// 	|                 | special purpose calls. This is the recommended starting point for allow-listing  |
 	// 	|                 | system calls for system services, as it contains what is typically needed by     |
 	// 	|                 | system services, but excludes overly specific interfaces. For example, the       |
 	// 	|                 | following APIs are excluded: "@clock", "@mount", "@swap", "@reboot".             |
 	// 	| @timer          | System calls for scheduling operations by time (alarm, timer_create, …)          |
+	// 	| @known          | All system calls defined by the kernel. This list is defined statically in       |
+	// 	|                 | systemd based on a kernel version that was available when this systemd version   |
+	// 	|                 | was released. It will become progressively more out-of-date as the kernel is     |
+	// 	|                 | updated.                                                                         |
 	// 	+-----------------+----------------------------------------------------------------------------------+
 	//
 	// Note, that as new system calls are added to the kernel, additional system calls might be added to the groups above. Contents
@@ -2070,8 +2341,8 @@ type ExecOptions struct {
 	// and architecture for which systemd was compiled. Use systemd-analyze syscall-filter to list the actual list of system
 	// calls in each filter.
 	//
-	// Generally, whitelisting system calls (rather than blacklisting) is the safer mode of operation. It is recommended to
-	// enforce system call whitelists for all long-running system services. Specifically, the following lines are a relatively
+	// Generally, allow-listing system calls (rather than deny-listing) is the safer mode of operation. It is recommended to
+	// enforce system call allow lists for all long-running system services. Specifically, the following lines are a relatively
 	// safe basic choice for the majority of system services:
 	//
 	// 	[Service] SystemCallFilter=@system-service SystemCallErrorNumber=EPERM
@@ -2079,9 +2350,9 @@ type ExecOptions struct {
 	// Note that various kernel system calls are defined redundantly: there are multiple system calls for executing the same
 	// operation. For example, the pidfd_send_signal() system call may be used to execute operations similar to what can be done
 	// with the older kill() system call, hence blocking the latter without the former only provides weak protection. Since new
-	// system calls are added regularly to the kernel as development progresses, keeping system call blacklists comprehensive
-	// requires constant work. It is thus recommended to use whitelisting instead, which offers the benefit that new system calls
-	// are by default implicitly blocked until the whitelist is updated.
+	// system calls are added regularly to the kernel as development progresses, keeping system call deny lists comprehensive
+	// requires constant work. It is thus recommended to use allow-listing instead, which offers the benefit that new system
+	// calls are by default implicitly blocked until the allow list is updated.
 	//
 	// Also note that a number of system calls are required to be accessible for the dynamic linker to work. The dynamic linker is
 	// required for running most regular programs (specifically: all dynamic ELF binaries, which is how most distributions
@@ -2090,14 +2361,14 @@ type ExecOptions struct {
 	//
 	// It is recommended to combine the file system namespacing related options with SystemCallFilter=~@mount, in order to
 	// prohibit the unit's processes to undo the mappings. Specifically these are the options PrivateTmp=, PrivateDevices=,
-	// ProtectSystem=, ProtectHome=, ProtectKernelTunables=, ProtectControlGroups=, ProtectKernelLogs=, ReadOnlyPaths=,
-	// InaccessiblePaths= and ReadWritePaths=.
+	// ProtectSystem=, ProtectHome=, ProtectKernelTunables=, ProtectControlGroups=, ProtectKernelLogs=, ProtectClock=,
+	// ReadOnlyPaths=, InaccessiblePaths= and ReadWritePaths=.
 	SystemCallFilter systemdconf.Value
 
 	// Takes an "errno" error number (between 1 and 4095) or errno name such as EPERM, EACCES or EUCLEAN, to return when the system
 	// call filter configured with SystemCallFilter= is triggered, instead of terminating the process immediately. See errno
-	// for a full list of error codes. When this setting is not used, or when the empty string is assigned, the process will be terminated
-	// immediately when the filter is triggered.
+	// for a full list of error codes. When this setting is not used, or when the empty string or the special setting "kill" is assigned,
+	// the process will be terminated immediately when the filter is triggered.
 	SystemCallErrorNumber systemdconf.Value
 
 	// Takes a space-separated list of architecture identifiers to include in the system call filter. The known architecture
@@ -2105,7 +2376,7 @@ type ExecOptions struct {
 	// and the special identifier native. The special identifier native implicitly maps to the native architecture of the system
 	// (or more precisely: to the architecture the system manager is compiled for). If running in user mode, or in system mode,
 	// but without the CAP_SYS_ADMIN capability (e.g. setting User=nobody), NoNewPrivileges=yes is implied. By default,
-	// this option is set to the empty list, i.e. no system call architecture filtering is applied.
+	// this option is set to the empty list, i.e. no filtering is applied.
 	//
 	// If this setting is used, processes of this unit will only be permitted to call native system calls, and system calls of the
 	// specified architectures. For the purposes of this option, the x32 architecture is treated as including x86-64 system
@@ -2121,12 +2392,24 @@ type ExecOptions struct {
 	// configuration. See systemd-system.conf for details.
 	SystemCallArchitectures systemdconf.Value
 
+	// Takes a space-separated list of system call names. If this setting is used, all system calls executed by the unit processes
+	// for the listed ones will be logged. If the first character of the list is "~", the effect is inverted: all system calls except
+	// the listed system calls will be logged. If running in user mode, or in system mode, but without the CAP_SYS_ADMIN capability
+	// (e.g. setting User=nobody), NoNewPrivileges=yes is implied. This feature makes use of the Secure Computing Mode 2 interfaces
+	// of the kernel ('seccomp filtering') and is useful for auditing or setting up a minimal sandboxing environment. This option
+	// may be specified more than once, in which case the filter masks are merged. If the empty string is assigned, the filter is
+	// reset, all prior assignments will have no effect. This does not affect commands prefixed with "+".
+	SystemCallLog systemdconf.Value
+
 	// Sets environment variables for executed processes. Takes a space-separated list of variable assignments. This option
 	// may be specified more than once, in which case all listed variables will be set. If the same variable is set twice, the later
 	// setting will override the earlier setting. If the empty string is assigned to this option, the list of environment variables
 	// is reset, all prior assignments have no effect. Variable expansion is not performed inside the strings, however, specifier
-	// expansion is possible. The $ character has no special meaning. If you need to assign a value containing spaces or the equals
+	// expansion is possible. The "$" character has no special meaning. If you need to assign a value containing spaces or the equals
 	// sign to a variable, use double quotes (") for the assignment.
+	//
+	// The names of the variables can contain ASCII letters, digits, and the underscore character. Variable names cannot be empty
+	// or start with a digit. In variable values, most characters are allowed, but non-printable characters are currently rejected.
 	//
 	// Example:
 	//
@@ -2140,7 +2423,7 @@ type ExecOptions struct {
 	// Environment variables set for a unit are exposed to unprivileged clients via D-Bus IPC, and generally not understood as
 	// being data that requires protection. Moreover, environment variables are propagated down the process tree, including
 	// across security boundaries (such as setuid/setgid executables), and hence might leak to processes that should not have
-	// access to the secret data.
+	// access to the secret data. Use LoadCredential= (see below) to pass data to unit processes securely.
 	Environment systemdconf.Value
 
 	// Similar to Environment= but reads the environment variables from a text file. The text file should contain new-line-separated
@@ -2158,7 +2441,8 @@ type ExecOptions struct {
 	//
 	// The files listed with this directive will be read shortly before the process is executed (more specifically, after all
 	// processes from a previous unit state terminated. This means you can generate these files in one unit state, and read it with
-	// this option in the next).
+	// this option in the next. The files are read from the file system of the service manager, before any file system changes like
+	// bind mounts take place).
 	//
 	// Settings from these files override settings made with Environment=. If the same variable is set twice from these files,
 	// the files will be read in the order they are specified and the later setting will override the earlier setting.
@@ -2239,10 +2523,6 @@ type ExecOptions struct {
 	// file descriptors and their ordering.
 	//
 	// This setting defaults to null.
-	//
-	// Note that services which specify DefaultDependencies=no and use StandardInput= or StandardOutput= with tty/tty-force/tty-fail,
-	// should specify After=systemd-vconsole-setup.service, to make sure that the tty initialization is finished before
-	// they start.
 	StandardInput systemdconf.Value
 
 	// Controls where file descriptor 1 (stdout) of the executed processes is connected to. Takes one of inherit, null, tty, journal,
@@ -2274,7 +2554,7 @@ type ExecOptions struct {
 	// useful when the specified path refers to an AF_UNIX socket in the file system, as in that case only a single stream connection
 	// is created for both input and output.
 	//
-	// append:path is similar to file:path  above, but it opens the file in append mode.
+	// append:path is similar to file:path above, but it opens the file in append mode.
 	//
 	// socket connects standard output to a socket acquired via socket activation. The semantics are similar to the same option
 	// of StandardInput=, see above.
@@ -2390,6 +2670,28 @@ type ExecOptions struct {
 	// for details). The default settings are set by RateLimitIntervalSec= and RateLimitBurst= configured in journald.conf.
 	LogRateLimitBurst systemdconf.Value
 
+	// Run the unit's processes in the specified journal namespace. Expects a short user-defined string identifying the namespace.
+	// If not used the processes of the service are run in the default journal namespace, i.e. their log stream is collected and
+	// processed by systemd-journald.service. If this option is used any log data generated by processes of this unit (regardless
+	// if via the syslog(), journal native logging or stdout/stderr logging) is collected and processed by an instance of the
+	// systemd-journald@.service template unit, which manages the specified namespace. The log data is stored in a data store
+	// independent from the default log namespace's data store. See systemd-journald.service for details about journal namespaces.
+	//
+	// Internally, journal namespaces are implemented through Linux mount namespacing and over-mounting the directory that
+	// contains the relevant AF_UNIX sockets used for logging in the unit's mount namespace. Since mount namespaces are used
+	// this setting disconnects propagation of mounts from the unit's processes to the host, similar to how ReadOnlyPaths= and
+	// similar settings (see above) work. Journal namespaces may hence not be used for services that need to establish mount points
+	// on the host.
+	//
+	// When this option is used the unit will automatically gain ordering and requirement dependencies on the two socket units
+	// associated with the systemd-journald@.service instance so that they are automatically established prior to the unit
+	// starting up. Note that when this option is used log output of this service does not appear in the regular journalctl output,
+	// unless the --namespace= option is used.
+	//
+	// This option is only available for system services and is not supported for services running in per-user instances of the
+	// service manager.
+	LogNamespace systemdconf.Value
+
 	// Sets the process name ("syslog tag") to prefix log lines sent to the logging system or the kernel log buffer with. If not set,
 	// defaults to the process name of the executed process. This option is only useful when StandardOutput= or StandardError=
 	// are set to journal or kmsg (or to the same settings in combination with +console) and only applies to log messages written
@@ -2431,6 +2733,55 @@ type ExecOptions struct {
 	// execution. This ensures that the screen and scrollback buffer is cleared. Defaults to "no".
 	TTYVTDisallocate systemdconf.Value
 
+	// Pass a credential to the unit. Credentials are limited-size binary or textual objects that may be passed to unit processes.
+	// They are primarily used for passing cryptographic keys (both public and private) or certificates, user account information
+	// or identity information from host to services. The data is accessible from the unit's processes via the file system, at
+	// a read-only location that (if possible and permitted) is backed by non-swappable memory. The data is only accessible to
+	// the user associated with the unit, via the User=/DynamicUser= settings (as well as the superuser). When available, the
+	// location of credentials is exported as the $CREDENTIALS_DIRECTORY environment variable to the unit's processes.
+	//
+	// The LoadCredential= setting takes a textual ID to use as name for a credential plus a file system path. The ID must be a short
+	// ASCII string suitable as filename in the filesystem, and may be chosen freely by the user. If the specified path is absolute
+	// it is opened as regular file and the credential data is read from it. If the absolute path refers to an AF_UNIX stream socket
+	// in the file system a connection is made to it (only once at unit start-up) and the credential data read from the connection,
+	// providing an easy IPC integration point for dynamically providing credentials from other services. If the specified
+	// path is not absolute and itself qualifies as valid credential identifier it is understood to refer to a credential that
+	// the service manager itself received via the $CREDENTIALS_DIRECTORY environment variable, which may be used to propagate
+	// credentials from an invoking environment (e.g. a container manager that invoked the service manager) into a service.
+	// The contents of the file/socket may be arbitrary binary or textual data, including newline characters and NUL bytes. This
+	// option may be used multiple times, each time defining an additional credential to pass to the unit.
+	//
+	// The credential files/IPC sockets must be accessible to the service manager, but don't have to be directly accessible to
+	// the unit's processes: the credential data is read and copied into separate, read-only copies for the unit that are accessible
+	// to appropriately privileged processes. This is particularly useful in combination with DynamicUser= as this way privileged
+	// data can be made available to processes running under a dynamic UID (i.e. not a previously known one) without having to open
+	// up access to all users.
+	//
+	// In order to reference the path a credential may be read from within a ExecStart= command line use "${CREDENTIALS_DIRECTORY}/mycred",
+	// e.g. "ExecStart=cat ${CREDENTIALS_DIRECTORY}/mycred".
+	//
+	// Currently, an accumulated credential size limit of 1M bytes per unit is enforced.
+	//
+	// If referencing an AF_UNIX stream socket to connect to, the connection will originate from an abstract namespace socket,
+	// that includes information about the unit and the credential ID in its socket name. Use getpeername to query this information.
+	// The returned socket name is formatted as NUL RANDOM "/unit/" UNIT "/" ID, i.e. a NUL byte (as required for abstract namespace
+	// socket names), followed by a random string (consisting of alphadecimal characters), followed by the literal string "/unit/",
+	// followed by the requesting unit name, followed by the literal character "/", followed by the textual credential ID requested.
+	// Example: "\0adf9d86b6eda275e/unit/foobar.service/credx" in case the credential "credx" is requested for a unit "foobar.service".
+	// This functionality is useful for using a single listening socket to serve credentials to multiple consumers.
+	LoadCredential systemdconf.Value
+
+	// The SetCredential= setting is similar to LoadCredential= but accepts a literal value to use as data for the credential,
+	// instead of a file system path to read the data from. Do not use this option for data that is supposed to be secret, as it is accessible
+	// to unprivileged processes via IPC. It's only safe to use this for user IDs, public key material and similar non-sensitive
+	// data. For everything else use LoadCredential=. In order to embed binary data into the credential data use C-style escaping
+	// (i.e. "\n" to embed a newline, or "\x00" to embed a NUL byte).
+	//
+	// If a credential of the same ID is listed in both LoadCredential= and SetCredential=, the latter will act as default if the
+	// former cannot be retrieved. In this case not being able to retrieve the credential from the path specified in LoadCredential=
+	// is not considered fatal.
+	SetCredential systemdconf.Value
+
 	// Takes a four character identifier string for an utmp and wtmp entry for this service. This should only be set for services
 	// such as getty implementations (such as agetty) where utmp/wtmp entries must be created and cleared before and after execution,
 	// or for services that shall be executed as if they were run by a getty process (see below). If the configured string is longer
@@ -2448,16 +2799,22 @@ type ExecOptions struct {
 	UtmpMode systemdconf.Value
 }
 
-// KillOptions represents a subset of configuration options which define the killing procedure of processes belonging to the unit
+// KillOptions represents systemd.kill — Process killing procedure
+// (see https://www.freedesktop.org/software/systemd/man/systemd.kill.html#Options for details)
 type KillOptions struct {
-	// Specifies how processes of this unit shall be killed. One of control-group, process, mixed, none.
+	// Specifies how processes of this unit shall be killed. One of control-group, mixed, process, none.
 	//
 	// If set to control-group, all remaining processes in the control group of this unit will be killed on unit stop (for services:
-	// after the stop command is executed, as configured with ExecStop=). If set to process, only the main process itself is killed.
-	// If set to mixed, the SIGTERM signal (see below) is sent to the main process while the subsequent SIGKILL signal (see below)
-	// is sent to all remaining processes of the unit's control group. If set to none, no process is killed. In this case, only the
-	// stop command will be executed on unit stop, but no process will be killed otherwise. Processes remaining alive after stop
-	// are left in their control group and the control group continues to exist after stop unless it is empty.
+	// after the stop command is executed, as configured with ExecStop=). If set to mixed, the SIGTERM signal (see below) is sent
+	// to the main process while the subsequent SIGKILL signal (see below) is sent to all remaining processes of the unit's control
+	// group. If set to process, only the main process itself is killed (not recommended!). If set to none, no process is killed
+	// (strongly recommended against!). In this case, only the stop command will be executed on unit stop, but no process will
+	// be killed otherwise. Processes remaining alive after stop are left in their control group and the control group continues
+	// to exist after stop unless empty.
+	//
+	// Note that it is not recommended to set KillMode= to process or even none, as this allows processes to escape the service manager's
+	// lifecycle and resource management, and to remain running even while their service is considered stopped and is assumed
+	// to not consume any resources.
 	//
 	// Processes will first be terminated via SIGTERM (unless the signal to send is changed via KillSignal= or RestartKillSignal=).
 	// Optionally, this is immediately followed by a SIGHUP (if enabled with SendSIGHUP=). If processes still remain after the
@@ -2494,7 +2851,7 @@ type KillOptions struct {
 	// Specifies which signal to send to remaining processes after a timeout if SendSIGKILL= is enabled. The signal configured
 	// here should be one that is not typically caught and processed by services (SIGTERM is not suitable). Developers can find
 	// it useful to use this to generate a coredump to troubleshoot why a service did not terminate upon receiving the initial SIGTERM
-	// signal. This can be achieved by configuring LimitCORE= and setting FinalKillSignal= to either SIGQUIT or SIGABRT Defaults
+	// signal. This can be achieved by configuring LimitCORE= and setting FinalKillSignal= to either SIGQUIT or SIGABRT. Defaults
 	// to SIGKILL.
 	FinalKillSignal systemdconf.Value
 
@@ -2503,7 +2860,8 @@ type KillOptions struct {
 	WatchdogSignal systemdconf.Value
 }
 
-// ResourceControlOptions represents a subset of configuration options for resource control of spawned processes
+// ResourceControlOptions represents systemd.resource-control — Resource control unit settings
+// (see https://www.freedesktop.org/software/systemd/man/systemd.resource-control.html for details)
 type ResourceControlOptions struct {
 	// Turn on CPU usage accounting for this unit. Takes a boolean argument. Note that turning on CPU accounting for one unit will
 	// also implicitly turn it on for all units contained in the same slice and for all its parent slices and the units contained
@@ -2512,7 +2870,7 @@ type ResourceControlOptions struct {
 
 	// Assign the specified CPU time weight to the processes executed, if the unified control group hierarchy is used on the system.
 	// These options take an integer value and control the "cpu.weight" control group attribute. The allowed range is 1 to 10000.
-	// Defaults to 100. For details about this control group attribute, see cgroup-v2.txt and sched-design-CFS.txt. The available
+	// Defaults to 100. For details about this control group attribute, see Control Groups v2 and CFS Scheduler. The available
 	// CPU time is split up among all units within one slice relative to their CPU time weight.
 	//
 	// While StartupCPUWeight= only applies to the startup phase of the system, CPUWeight= applies to normal runtime of the system,
@@ -2524,7 +2882,7 @@ type ResourceControlOptions struct {
 
 	// Assign the specified CPU time weight to the processes executed, if the unified control group hierarchy is used on the system.
 	// These options take an integer value and control the "cpu.weight" control group attribute. The allowed range is 1 to 10000.
-	// Defaults to 100. For details about this control group attribute, see cgroup-v2.txt and sched-design-CFS.txt. The available
+	// Defaults to 100. For details about this control group attribute, see Control Groups v2 and CFS Scheduler. The available
 	// CPU time is split up among all units within one slice relative to their CPU time weight.
 	//
 	// While StartupCPUWeight= only applies to the startup phase of the system, CPUWeight= applies to normal runtime of the system,
@@ -2537,7 +2895,7 @@ type ResourceControlOptions struct {
 	// Assign the specified CPU time quota to the processes executed. Takes a percentage value, suffixed with "%". The percentage
 	// specifies how much CPU time the unit shall get at maximum, relative to the total CPU time available on one CPU. Use values
 	// > 100% for allotting CPU time on more than one CPU. This controls the "cpu.max" attribute on the unified control group hierarchy
-	// and "cpu.cfs_quota_us" on legacy. For details about these control group attributes, see cgroup-v2.txt and sched-bwc.txt.
+	// and "cpu.cfs_quota_us" on legacy. For details about these control group attributes, see Control Groups v2 and sched-bwc.txt.
 	//
 	// Example: CPUQuota=20% ensures that the executed processes will never get more than 20% CPU time on one CPU.
 	CPUQuota systemdconf.Value
@@ -2548,7 +2906,7 @@ type ResourceControlOptions struct {
 	// is also at least 1ms. Setting CPUQuotaPeriodSec= to an empty value resets it to the default.
 	//
 	// This controls the second field of "cpu.max" attribute on the unified control group hierarchy and "cpu.cfs_period_us"
-	// on legacy. For details about these control group attributes, see cgroup-v2.txt and sched-design-CFS.txt.
+	// on legacy. For details about these control group attributes, see Control Groups v2 and CFS Scheduler.
 	//
 	// Example: CPUQuotaPeriodSec=10ms to request that the CPU quota is measured in periods of 10ms.
 	CPUQuotaPeriodSec systemdconf.Value
@@ -2577,35 +2935,54 @@ type ResourceControlOptions struct {
 	// units contained therein. The system default for this setting may be controlled with DefaultMemoryAccounting= in systemd-system.conf.
 	MemoryAccounting systemdconf.Value
 
-	// Specify the memory usage protection of the executed processes in this unit. If the memory usages of this unit and all its
-	// ancestors are below their minimum boundaries, this unit's memory won't be reclaimed.
+	// Specify the memory usage protection of the executed processes in this unit. When reclaiming memory, the unit is treated
+	// as if it was using less memory resulting in memory to be preferentially reclaimed from unprotected units. Using MemoryLow=
+	// results in a weaker protection where memory may still be reclaimed to avoid invoking the OOM killer in case there is no other
+	// reclaimable memory.
+	//
+	// For a protection to be effective, it is generally required to set a corresponding allocation on all ancestors, which is
+	// then distributed between children (with the exception of the root slice). Any MemoryMin= or MemoryLow= allocation that
+	// is not explicitly distributed to specific children is used to create a shared protection for all children. As this is a shared
+	// protection, the children will freely compete for the memory.
 	//
 	// Takes a memory size in bytes. If the value is suffixed with K, M, G or T, the specified memory size is parsed as Kilobytes, Megabytes,
 	// Gigabytes, or Terabytes (with the base 1024), respectively. Alternatively, a percentage value may be specified, which
 	// is taken relative to the installed physical memory on the system. If assigned the special value "infinity", all available
 	// memory is protected, which may be useful in order to always inherit all of the protection afforded by ancestors. This controls
-	// the "memory.min" control group attribute. For details about this control group attribute, see cgroup-v2.txt.
+	// the "memory.min" or "memory.low" control group attribute. For details about this control group attribute, see Memory
+	// Interface Files.
 	//
 	// This setting is supported only if the unified control group hierarchy is used and disables MemoryLimit=.
 	//
-	// Units may have their children use a default "memory.min" value by specifying DefaultMemoryMin=, which has the same semantics
-	// as MemoryMin=. This setting does not affect "memory.min" in the unit itself.
+	// Units may have their children use a default "memory.min" or "memory.low" value by specifying DefaultMemoryMin= or DefaultMemoryLow=,
+	// which has the same semantics as MemoryMin= and MemoryLow=. This setting does not affect "memory.min" or "memory.low"
+	// in the unit itself. Using it to set a default child allocation is only useful on kernels older than 5.7, which do not support
+	// the "memory_recursiveprot" cgroup2 mount option.
 	MemoryMin systemdconf.Value
 
-	// Specify the best-effort memory usage protection of the executed processes in this unit. If the memory usages of this unit
-	// and all its ancestors are below their low boundaries, this unit's memory won't be reclaimed as long as memory can be reclaimed
-	// from unprotected units.
+	// Specify the memory usage protection of the executed processes in this unit. When reclaiming memory, the unit is treated
+	// as if it was using less memory resulting in memory to be preferentially reclaimed from unprotected units. Using MemoryLow=
+	// results in a weaker protection where memory may still be reclaimed to avoid invoking the OOM killer in case there is no other
+	// reclaimable memory.
+	//
+	// For a protection to be effective, it is generally required to set a corresponding allocation on all ancestors, which is
+	// then distributed between children (with the exception of the root slice). Any MemoryMin= or MemoryLow= allocation that
+	// is not explicitly distributed to specific children is used to create a shared protection for all children. As this is a shared
+	// protection, the children will freely compete for the memory.
 	//
 	// Takes a memory size in bytes. If the value is suffixed with K, M, G or T, the specified memory size is parsed as Kilobytes, Megabytes,
 	// Gigabytes, or Terabytes (with the base 1024), respectively. Alternatively, a percentage value may be specified, which
 	// is taken relative to the installed physical memory on the system. If assigned the special value "infinity", all available
 	// memory is protected, which may be useful in order to always inherit all of the protection afforded by ancestors. This controls
-	// the "memory.low" control group attribute. For details about this control group attribute, see cgroup-v2.txt.
+	// the "memory.min" or "memory.low" control group attribute. For details about this control group attribute, see Memory
+	// Interface Files.
 	//
 	// This setting is supported only if the unified control group hierarchy is used and disables MemoryLimit=.
 	//
-	// Units may have their children use a default "memory.low" value by specifying DefaultMemoryLow=, which has the same semantics
-	// as MemoryLow=. This setting does not affect "memory.low" in the unit itself.
+	// Units may have their children use a default "memory.min" or "memory.low" value by specifying DefaultMemoryMin= or DefaultMemoryLow=,
+	// which has the same semantics as MemoryMin= and MemoryLow=. This setting does not affect "memory.min" or "memory.low"
+	// in the unit itself. Using it to set a default child allocation is only useful on kernels older than 5.7, which do not support
+	// the "memory_recursiveprot" cgroup2 mount option.
 	MemoryLow systemdconf.Value
 
 	// Specify the throttling limit on memory usage of the executed processes in this unit. Memory usage may go above the limit
@@ -2616,7 +2993,7 @@ type ResourceControlOptions struct {
 	// Gigabytes, or Terabytes (with the base 1024), respectively. Alternatively, a percentage value may be specified, which
 	// is taken relative to the installed physical memory on the system. If assigned the special value "infinity", no memory throttling
 	// is applied. This controls the "memory.high" control group attribute. For details about this control group attribute,
-	// see cgroup-v2.txt.
+	// see Memory Interface Files.
 	//
 	// This setting is supported only if the unified control group hierarchy is used and disables MemoryLimit=.
 	MemoryHigh systemdconf.Value
@@ -2629,7 +3006,7 @@ type ResourceControlOptions struct {
 	// Gigabytes, or Terabytes (with the base 1024), respectively. Alternatively, a percentage value may be specified, which
 	// is taken relative to the installed physical memory on the system. If assigned the special value "infinity", no memory limit
 	// is applied. This controls the "memory.max" control group attribute. For details about this control group attribute,
-	// see cgroup-v2.txt.
+	// see Memory Interface Files.
 	//
 	// This setting replaces MemoryLimit=.
 	MemoryMax systemdconf.Value
@@ -2639,7 +3016,7 @@ type ResourceControlOptions struct {
 	// Takes a swap size in bytes. If the value is suffixed with K, M, G or T, the specified swap size is parsed as Kilobytes, Megabytes,
 	// Gigabytes, or Terabytes (with the base 1024), respectively. If assigned the special value "infinity", no swap limit is
 	// applied. This controls the "memory.swap.max" control group attribute. For details about this control group attribute,
-	// see cgroup-v2.txt.
+	// see Memory Interface Files.
 	//
 	// This setting is supported only if the unified control group hierarchy is used and disables MemoryLimit=.
 	MemorySwapMax systemdconf.Value
@@ -2655,7 +3032,7 @@ type ResourceControlOptions struct {
 	// unit (see above) stays below a specific limit. This either takes an absolute number of tasks or a percentage value that is
 	// taken relative to the configured maximum number of tasks on the system. If assigned the special value "infinity", no tasks
 	// limit is applied. This controls the "pids.max" control group attribute. For details about this control group attribute,
-	// see pids.txt.
+	// see Process Number Controller.
 	//
 	// The system default for this setting may be controlled with DefaultTasksMax= in systemd-system.conf.
 	TasksMax systemdconf.Value
@@ -2670,8 +3047,8 @@ type ResourceControlOptions struct {
 
 	// Set the default overall block I/O weight for the executed processes, if the unified control group hierarchy is used on the
 	// system. Takes a single weight value (between 1 and 10000) to set the default block I/O weight. This controls the "io.weight"
-	// control group attribute, which defaults to 100. For details about this control group attribute, see cgroup-v2.txt. The
-	// available I/O bandwidth is split up among all units within one slice relative to their block I/O weight.
+	// control group attribute, which defaults to 100. For details about this control group attribute, see IO Interface Files.
+	// The available I/O bandwidth is split up among all units within one slice relative to their block I/O weight.
 	//
 	// While StartupIOWeight= only applies to the startup phase of the system, IOWeight= applies to the later runtime of the system,
 	// and if the former is not set also to the startup phase. This allows prioritizing specific services at boot-up differently
@@ -2682,8 +3059,8 @@ type ResourceControlOptions struct {
 
 	// Set the default overall block I/O weight for the executed processes, if the unified control group hierarchy is used on the
 	// system. Takes a single weight value (between 1 and 10000) to set the default block I/O weight. This controls the "io.weight"
-	// control group attribute, which defaults to 100. For details about this control group attribute, see cgroup-v2.txt. The
-	// available I/O bandwidth is split up among all units within one slice relative to their block I/O weight.
+	// control group attribute, which defaults to 100. For details about this control group attribute, see IO Interface Files.
+	// The available I/O bandwidth is split up among all units within one slice relative to their block I/O weight.
 	//
 	// While StartupIOWeight= only applies to the startup phase of the system, IOWeight= applies to the later runtime of the system,
 	// and if the former is not set also to the startup phase. This allows prioritizing specific services at boot-up differently
@@ -2697,9 +3074,16 @@ type ResourceControlOptions struct {
 	// between 1 and 10000. (Example: "/dev/sda 1000"). The file path may be specified as path to a block device node or as any other
 	// file, in which case the backing block device of the file system of the file is determined. This controls the "io.weight"
 	// control group attribute, which defaults to 100. Use this option multiple times to set weights for multiple devices. For
-	// details about this control group attribute, see cgroup-v2.txt.
+	// details about this control group attribute, see IO Interface Files.
 	//
 	// This setting replaces BlockIODeviceWeight= and disables settings prefixed with BlockIO or StartupBlockIO.
+	//
+	// The specified device node should reference a block device that has an I/O scheduler associated, i.e. should not refer to
+	// partition or loopback block devices, but to the originating, physical device. When a path to a regular file or directory
+	// is specified it is attempted to discover the correct originating device backing the file system of the specified path.
+	// This works correctly only for simpler cases, where the file system is directly placed on a partition or physical block device,
+	// or where simple 1:1 encryption using dm-crypt/LUKS is used. This discovery does not cover complex storage and in particular
+	// RAID and volume management storage devices.
 	IODeviceWeight systemdconf.Value
 
 	// Set the per-device overall block I/O bandwidth maximum limit for the executed processes, if the unified control group
@@ -2709,10 +3093,12 @@ type ResourceControlOptions struct {
 	// the backing block device of the file system of the file is used. If the bandwidth is suffixed with K, M, G, or T, the specified
 	// bandwidth is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes, respectively, to the base of 1000. (Example: "/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0
 	// 5M"). This controls the "io.max" control group attributes. Use this option multiple times to set bandwidth limits for
-	// multiple devices. For details about this control group attribute, see cgroup-v2.txt.
+	// multiple devices. For details about this control group attribute, see IO Interface Files.
 	//
 	// These settings replace BlockIOReadBandwidth= and BlockIOWriteBandwidth= and disable settings prefixed with BlockIO
 	// or StartupBlockIO.
+	//
+	// Similar restrictions on block device discovery as for IODeviceWeight= apply, see above.
 	IOReadBandwidthMax systemdconf.Value
 
 	// Set the per-device overall block I/O bandwidth maximum limit for the executed processes, if the unified control group
@@ -2722,10 +3108,12 @@ type ResourceControlOptions struct {
 	// the backing block device of the file system of the file is used. If the bandwidth is suffixed with K, M, G, or T, the specified
 	// bandwidth is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes, respectively, to the base of 1000. (Example: "/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0
 	// 5M"). This controls the "io.max" control group attributes. Use this option multiple times to set bandwidth limits for
-	// multiple devices. For details about this control group attribute, see cgroup-v2.txt.
+	// multiple devices. For details about this control group attribute, see IO Interface Files.
 	//
 	// These settings replace BlockIOReadBandwidth= and BlockIOWriteBandwidth= and disable settings prefixed with BlockIO
 	// or StartupBlockIO.
+	//
+	// Similar restrictions on block device discovery as for IODeviceWeight= apply, see above.
 	IOWriteBandwidthMax systemdconf.Value
 
 	// Set the per-device overall block I/O IOs-Per-Second maximum limit for the executed processes, if the unified control
@@ -2735,10 +3123,12 @@ type ResourceControlOptions struct {
 	// of the file system of the file is used. If the IOPS is suffixed with K, M, G, or T, the specified IOPS is parsed as KiloIOPS, MegaIOPS,
 	// GigaIOPS, or TeraIOPS, respectively, to the base of 1000. (Example: "/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0
 	// 1K"). This controls the "io.max" control group attributes. Use this option multiple times to set IOPS limits for multiple
-	// devices. For details about this control group attribute, see cgroup-v2.txt.
+	// devices. For details about this control group attribute, see IO Interface Files.
 	//
 	// These settings are supported only if the unified control group hierarchy is used and disable settings prefixed with BlockIO
 	// or StartupBlockIO.
+	//
+	// Similar restrictions on block device discovery as for IODeviceWeight= apply, see above.
 	IOReadIOPSMax systemdconf.Value
 
 	// Set the per-device overall block I/O IOs-Per-Second maximum limit for the executed processes, if the unified control
@@ -2748,10 +3138,12 @@ type ResourceControlOptions struct {
 	// of the file system of the file is used. If the IOPS is suffixed with K, M, G, or T, the specified IOPS is parsed as KiloIOPS, MegaIOPS,
 	// GigaIOPS, or TeraIOPS, respectively, to the base of 1000. (Example: "/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0
 	// 1K"). This controls the "io.max" control group attributes. Use this option multiple times to set IOPS limits for multiple
-	// devices. For details about this control group attribute, see cgroup-v2.txt.
+	// devices. For details about this control group attribute, see IO Interface Files.
 	//
 	// These settings are supported only if the unified control group hierarchy is used and disable settings prefixed with BlockIO
 	// or StartupBlockIO.
+	//
+	// Similar restrictions on block device discovery as for IODeviceWeight= apply, see above.
 	IOWriteIOPSMax systemdconf.Value
 
 	// Set the per-device average target I/O latency for the executed processes, if the unified control group hierarchy is used
@@ -2759,11 +3151,13 @@ type ResourceControlOptions struct {
 	// "/dev/sda 25ms"). The file path may be specified as path to a block device node or as any other file, in which case the backing
 	// block device of the file system of the file is determined. This controls the "io.latency" control group attribute. Use
 	// this option multiple times to set latency target for multiple devices. For details about this control group attribute,
-	// see cgroup-v2.txt.
+	// see IO Interface Files.
 	//
 	// Implies "IOAccounting=yes".
 	//
 	// These settings are supported only if the unified control group hierarchy is used.
+	//
+	// Similar restrictions on block device discovery as for IODeviceWeight= apply, see above.
 	IODeviceLatencyTargetSec systemdconf.Value
 
 	// Takes a boolean argument. If true, turns on IPv4 and IPv6 network traffic accounting for packets sent or received by the
@@ -2779,24 +3173,24 @@ type ResourceControlOptions struct {
 	// The system default for this setting may be controlled with DefaultIPAccounting= in systemd-system.conf.
 	IPAccounting systemdconf.Value
 
-	// Turn on address range network traffic filtering for IP packets sent and received over AF_INET and AF_INET6 sockets. Both
-	// directives take a space separated list of IPv4 or IPv6 addresses, each optionally suffixed with an address prefix length
-	// in bits (separated by a "/" character). If the latter is omitted, the address is considered a host address, i.e. the prefix
-	// covers the whole address (32 for IPv4, 128 for IPv6).
+	// Turn on network traffic filtering for IP packets sent and received over AF_INET and AF_INET6 sockets. Both directives
+	// take a space separated list of IPv4 or IPv6 addresses, each optionally suffixed with an address prefix length in bits after
+	// a "/" character. If the suffix is omitted, the address is considered a host address, i.e. the filter covers the whole address
+	// (32 bits for IPv4, 128 bits for IPv6).
 	//
 	// The access lists configured with this option are applied to all sockets created by processes of this unit (or in the case
 	// of socket units, associated with it). The lists are implicitly combined with any lists configured for any of the parent
-	// slice units this unit might be a member of. By default all access lists are empty. Both ingress and egress traffic is filtered
+	// slice units this unit might be a member of. By default both access lists are empty. Both ingress and egress traffic is filtered
 	// by these settings. In case of ingress traffic the source IP address is checked against these access lists, in case of egress
-	// traffic the destination IP address is checked. When configured the lists are enforced as follows:
+	// traffic the destination IP address is checked. The following rules are applied in turn:
 	//
-	// Access will be granted in case an IP packet's destination/source address matches any entry in the IPAddressAllow= setting.
+	// Access is granted when the checked IP address matches an entry in the IPAddressAllow= list.
 	//
-	// Otherwise, access will be denied in case its destination/source address matches any entry in the IPAddressDeny= setting.
+	// Otherwise, access is denied when the checked IP address matches an entry in the IPAddressDeny= list.
 	//
-	// Otherwise, access will be granted.
+	// Otherwise, access is granted.
 	//
-	// In order to implement a whitelisting IP firewall, it is recommended to use a IPAddressDeny=any setting on an upper-level
+	// In order to implement an allow-listing IP firewall, it is recommended to use a IPAddressDeny=any setting on an upper-level
 	// slice unit (such as the root slice -.slice or the slice containing all system services system.slice – see systemd.special
 	// for details on these slice units), plus individual per-service IPAddressAllow= lines permitting network access to relevant
 	// services, and only them.
@@ -2804,7 +3198,7 @@ type ResourceControlOptions struct {
 	// Note that for socket-activated services, the IP access list configured on the socket unit applies to all sockets associated
 	// with it directly, but not to any sockets created by the ultimately activated services for it. Conversely, the IP access
 	// list configured for the service is not applied to any sockets passed into the service via socket activation. Thus, it is
-	// usually a good idea, to replicate the IP access lists on both the socket and the service unit, however it often makes sense
+	// usually a good idea to replicate the IP access lists on both the socket and the service unit. Nevertheless, it may make sense
 	// to maintain one list more open and the other one more restricted, depending on the usecase.
 	//
 	// If these settings are used multiple times in the same unit the specified lists are combined. If an empty string is assigned
@@ -2828,24 +3222,24 @@ type ResourceControlOptions struct {
 	// such systems is desired it is hence recommended to not exclusively rely on them for IP security.
 	IPAddressAllow systemdconf.Value
 
-	// Turn on address range network traffic filtering for IP packets sent and received over AF_INET and AF_INET6 sockets. Both
-	// directives take a space separated list of IPv4 or IPv6 addresses, each optionally suffixed with an address prefix length
-	// in bits (separated by a "/" character). If the latter is omitted, the address is considered a host address, i.e. the prefix
-	// covers the whole address (32 for IPv4, 128 for IPv6).
+	// Turn on network traffic filtering for IP packets sent and received over AF_INET and AF_INET6 sockets. Both directives
+	// take a space separated list of IPv4 or IPv6 addresses, each optionally suffixed with an address prefix length in bits after
+	// a "/" character. If the suffix is omitted, the address is considered a host address, i.e. the filter covers the whole address
+	// (32 bits for IPv4, 128 bits for IPv6).
 	//
 	// The access lists configured with this option are applied to all sockets created by processes of this unit (or in the case
 	// of socket units, associated with it). The lists are implicitly combined with any lists configured for any of the parent
-	// slice units this unit might be a member of. By default all access lists are empty. Both ingress and egress traffic is filtered
+	// slice units this unit might be a member of. By default both access lists are empty. Both ingress and egress traffic is filtered
 	// by these settings. In case of ingress traffic the source IP address is checked against these access lists, in case of egress
-	// traffic the destination IP address is checked. When configured the lists are enforced as follows:
+	// traffic the destination IP address is checked. The following rules are applied in turn:
 	//
-	// Access will be granted in case an IP packet's destination/source address matches any entry in the IPAddressAllow= setting.
+	// Access is granted when the checked IP address matches an entry in the IPAddressAllow= list.
 	//
-	// Otherwise, access will be denied in case its destination/source address matches any entry in the IPAddressDeny= setting.
+	// Otherwise, access is denied when the checked IP address matches an entry in the IPAddressDeny= list.
 	//
-	// Otherwise, access will be granted.
+	// Otherwise, access is granted.
 	//
-	// In order to implement a whitelisting IP firewall, it is recommended to use a IPAddressDeny=any setting on an upper-level
+	// In order to implement an allow-listing IP firewall, it is recommended to use a IPAddressDeny=any setting on an upper-level
 	// slice unit (such as the root slice -.slice or the slice containing all system services system.slice – see systemd.special
 	// for details on these slice units), plus individual per-service IPAddressAllow= lines permitting network access to relevant
 	// services, and only them.
@@ -2853,7 +3247,7 @@ type ResourceControlOptions struct {
 	// Note that for socket-activated services, the IP access list configured on the socket unit applies to all sockets associated
 	// with it directly, but not to any sockets created by the ultimately activated services for it. Conversely, the IP access
 	// list configured for the service is not applied to any sockets passed into the service via socket activation. Thus, it is
-	// usually a good idea, to replicate the IP access lists on both the socket and the service unit, however it often makes sense
+	// usually a good idea to replicate the IP access lists on both the socket and the service unit. Nevertheless, it may make sense
 	// to maintain one list more open and the other one more restricted, depending on the usecase.
 	//
 	// If these settings are used multiple times in the same unit the specified lists are combined. If an empty string is assigned
@@ -2926,10 +3320,11 @@ type ResourceControlOptions struct {
 	// Control access to specific device nodes by the executed processes. Takes two space-separated strings: a device node specifier
 	// followed by a combination of r, w, m to control reading, writing, or creation of the specific device node(s) by the unit (mknod),
 	// respectively. On cgroup-v1 this controls the "devices.allow" control group attribute. For details about this control
-	// group attribute, see devices.txt. On cgroup-v2 this functionality is implemented using eBPF filtering.
+	// group attribute, see Device Whitelist Controller. In the unified cgroup hierarchy this functionality is implemented
+	// using eBPF filtering.
 	//
 	// The device node specifier is either a path to a device node in the file system, starting with /dev/, or a string starting with
-	// either "char-" or "block-" followed by a device group name, as listed in /proc/devices. The latter is useful to whitelist
+	// either "char-" or "block-" followed by a device group name, as listed in /proc/devices. The latter is useful to allow-list
 	// all current and future devices belonging to a specific device group at once. The device group is matched according to filename
 	// globbing rules, you may hence use the "*" and "?" wildcards. (Note that such globbing wildcards are not available for device
 	// node path specifications!) In order to match device nodes by numeric major/minor, use device node paths in the /dev/char/
@@ -2940,12 +3335,13 @@ type ResourceControlOptions struct {
 	// specifiers for all pseudo TTYs and all ALSA sound devices, respectively. "char-cpu/*" is a specifier matching all CPU
 	// related device groups.
 	//
-	// Note that whitelists defined this way should only reference device groups which are resolvable at the time the unit is started.
-	// Any device groups not resolvable then are not added to the device whitelist. In order to work around this limitation, consider
-	// extending service units with an ExecStartPre=/sbin/modprobe… line that loads the necessary kernel module implementing
-	// the device group if missing. Example:
+	// Note that allow lists defined this way should only reference device groups which are resolvable at the time the unit is started.
+	// Any device groups not resolvable then are not added to the device allow list. In order to work around this limitation, consider
+	// extending service units with a pair of After=modprobe@xyz.service and Wants=modprobe@xyz.service lines that load
+	// the necessary kernel module implementing the device group if missing. Example:
 	//
-	// 	… [Service] ExecStartPre=-/sbin/modprobe -abq loop DeviceAllow=block-loop DeviceAllow=/dev/loop-control …
+	// 	… [Unit] Wants=modprobe@loop.service After=modprobe@loop.service [Service] DeviceAllow=block-loop DeviceAllow=/dev/loop-control
+	// 	…
 	DeviceAllow systemdconf.Value
 
 	// Control the policy for allowing device access:
@@ -2986,10 +3382,12 @@ type ResourceControlOptions struct {
 	// Note that controller delegation to less privileged code is only safe on the unified control group hierarchy. Accordingly,
 	// access to the specified controllers will not be granted to unprivileged services on the legacy hierarchy, even when requested.
 	//
-	// The following controller names may be specified: cpu, cpuacct, io, blkio, memory, devices, pids. Not all of these controllers
-	// are available on all kernels however, and some are specific to the unified hierarchy while others are specific to the legacy
-	// hierarchy. Also note that the kernel might support further controllers, which aren't covered here yet as delegation is
-	// either not supported at all for them or not defined cleanly.
+	// The following controller names may be specified: cpu, cpuacct, cpuset, io, blkio, memory, devices, pids, bpf-firewall,
+	// and bpf-devices.
+	//
+	// Not all of these controllers are available on all kernels however, and some are specific to the unified hierarchy while
+	// others are specific to the legacy hierarchy. Also note that the kernel might support further controllers, which aren't
+	// covered here yet as delegation is either not supported at all for them or not defined cleanly.
 	//
 	// For further details on the delegation model consult Control Group APIs and Delegation.
 	Delegate systemdconf.Value
@@ -3005,13 +3403,47 @@ type ResourceControlOptions struct {
 	// which case each new instance adds another controller to disable. Passing DisableControllers= by itself with no controller
 	// name present resets the disabled controller list.
 	//
-	// Valid controllers are cpu, cpuacct, io, blkio, memory, devices, and pids.
+	// The following controller names may be specified: cpu, cpuacct, cpuset, io, blkio, memory, devices, pids, bpf-firewall,
+	// and bpf-devices.
 	DisableControllers systemdconf.Value
+
+	// Specifies how systemd-oomd.service will act on this unit's cgroups. Defaults to auto.
+	//
+	// When set to kill, systemd-oomd will actively monitor this unit's cgroup metrics to decide whether it needs to act. If the
+	// cgroup passes the limits set by oomd.conf or its overrides, systemd-oomd will send a SIGKILL to all of the processes under
+	// the chosen candidate cgroup. Note that only descendant cgroups can be eligible candidates for killing; the unit that set
+	// its property to kill is not a candidate (unless one of its ancestors set their property to kill). You can find more details
+	// on candidates and kill behavior at systemd-oomd.service and oomd.conf. Setting either of these properties to kill will
+	// also automatically acquire After= and Wants= dependencies on systemd-oomd.service unless DefaultDependencies=no.
+	//
+	// When set to auto, systemd-oomd will not actively use this cgroup's data for monitoring and detection. However, if an ancestor
+	// cgroup has one of these properties set to kill, a unit with auto can still be an eligible candidate for systemd-oomd to act
+	// on.
+	ManagedOOMSwap systemdconf.Value
+
+	// Specifies how systemd-oomd.service will act on this unit's cgroups. Defaults to auto.
+	//
+	// When set to kill, systemd-oomd will actively monitor this unit's cgroup metrics to decide whether it needs to act. If the
+	// cgroup passes the limits set by oomd.conf or its overrides, systemd-oomd will send a SIGKILL to all of the processes under
+	// the chosen candidate cgroup. Note that only descendant cgroups can be eligible candidates for killing; the unit that set
+	// its property to kill is not a candidate (unless one of its ancestors set their property to kill). You can find more details
+	// on candidates and kill behavior at systemd-oomd.service and oomd.conf. Setting either of these properties to kill will
+	// also automatically acquire After= and Wants= dependencies on systemd-oomd.service unless DefaultDependencies=no.
+	//
+	// When set to auto, systemd-oomd will not actively use this cgroup's data for monitoring and detection. However, if an ancestor
+	// cgroup has one of these properties set to kill, a unit with auto can still be an eligible candidate for systemd-oomd to act
+	// on.
+	ManagedOOMMemoryPressure systemdconf.Value
+
+	// Overrides the default memory pressure limit set by oomd.conf for this unit (cgroup). Takes a percentage value between
+	// 0% and 100%, inclusive. This property is ignored unless ManagedOOMMemoryPressure=kill. Defaults to 0%, which means
+	// use the default set by oomd.conf.
+	ManagedOOMMemoryPressureLimitPercent systemdconf.Value
 
 	// Assign the specified CPU time share weight to the processes executed. These options take an integer value and control the
 	// "cpu.shares" control group attribute. The allowed range is 2 to 262144. Defaults to 1024. For details about this control
-	// group attribute, see sched-design-CFS.txt. The available CPU time is split up among all units within one slice relative
-	// to their CPU time share weight.
+	// group attribute, see CFS Scheduler. The available CPU time is split up among all units within one slice relative to their
+	// CPU time share weight.
 	//
 	// While StartupCPUShares= only applies to the startup phase of the system, CPUShares= applies to normal runtime of the system,
 	// and if the former is not set also to the startup phase. Using StartupCPUShares= allows prioritizing specific services
@@ -3024,8 +3456,8 @@ type ResourceControlOptions struct {
 
 	// Assign the specified CPU time share weight to the processes executed. These options take an integer value and control the
 	// "cpu.shares" control group attribute. The allowed range is 2 to 262144. Defaults to 1024. For details about this control
-	// group attribute, see sched-design-CFS.txt. The available CPU time is split up among all units within one slice relative
-	// to their CPU time share weight.
+	// group attribute, see CFS Scheduler. The available CPU time is split up among all units within one slice relative to their
+	// CPU time share weight.
 	//
 	// While StartupCPUShares= only applies to the startup phase of the system, CPUShares= applies to normal runtime of the system,
 	// and if the former is not set also to the startup phase. Using StartupCPUShares= allows prioritizing specific services
@@ -3041,7 +3473,7 @@ type ResourceControlOptions struct {
 	// size is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes (with the base 1024), respectively. Alternatively,
 	// a percentage value may be specified, which is taken relative to the installed physical memory on the system. If assigned
 	// the special value "infinity", no memory limit is applied. This controls the "memory.limit_in_bytes" control group attribute.
-	// For details about this control group attribute, see memory.txt.
+	// For details about this control group attribute, see Memory Resource Controller.
 	//
 	// Implies "MemoryAccounting=yes".
 	//
@@ -3058,7 +3490,7 @@ type ResourceControlOptions struct {
 
 	// Set the default overall block I/O weight for the executed processes, if the legacy control group hierarchy is used on the
 	// system. Takes a single weight value (between 10 and 1000) to set the default block I/O weight. This controls the "blkio.weight"
-	// control group attribute, which defaults to 500. For details about this control group attribute, see blkio-controller.txt.
+	// control group attribute, which defaults to 500. For details about this control group attribute, see Block IO Controller.
 	// The available I/O bandwidth is split up among all units within one slice relative to their block I/O weight.
 	//
 	// While StartupBlockIOWeight= only applies to the startup phase of the system, BlockIOWeight= applies to the later runtime
@@ -3072,7 +3504,7 @@ type ResourceControlOptions struct {
 
 	// Set the default overall block I/O weight for the executed processes, if the legacy control group hierarchy is used on the
 	// system. Takes a single weight value (between 10 and 1000) to set the default block I/O weight. This controls the "blkio.weight"
-	// control group attribute, which defaults to 500. For details about this control group attribute, see blkio-controller.txt.
+	// control group attribute, which defaults to 500. For details about this control group attribute, see Block IO Controller.
 	// The available I/O bandwidth is split up among all units within one slice relative to their block I/O weight.
 	//
 	// While StartupBlockIOWeight= only applies to the startup phase of the system, BlockIOWeight= applies to the later runtime
@@ -3089,7 +3521,7 @@ type ResourceControlOptions struct {
 	// 10 and 1000. (Example: "/dev/sda 500"). The file path may be specified as path to a block device node or as any other file,
 	// in which case the backing block device of the file system of the file is determined. This controls the "blkio.weight_device"
 	// control group attribute, which defaults to 1000. Use this option multiple times to set weights for multiple devices. For
-	// details about this control group attribute, see blkio-controller.txt.
+	// details about this control group attribute, see Block IO Controller.
 	//
 	// Implies "BlockIOAccounting=yes".
 	//
@@ -3103,7 +3535,7 @@ type ResourceControlOptions struct {
 	// is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes, respectively, to the base of 1000. (Example: "/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0
 	// 5M"). This controls the "blkio.throttle.read_bps_device" and "blkio.throttle.write_bps_device" control group
 	// attributes. Use this option multiple times to set bandwidth limits for multiple devices. For details about these control
-	// group attributes, see blkio-controller.txt.
+	// group attributes, see Block IO Controller.
 	//
 	// Implies "BlockIOAccounting=yes".
 	//
@@ -3117,7 +3549,7 @@ type ResourceControlOptions struct {
 	// is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes, respectively, to the base of 1000. (Example: "/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0
 	// 5M"). This controls the "blkio.throttle.read_bps_device" and "blkio.throttle.write_bps_device" control group
 	// attributes. Use this option multiple times to set bandwidth limits for multiple devices. For details about these control
-	// group attributes, see blkio-controller.txt.
+	// group attributes, see Block IO Controller.
 	//
 	// Implies "BlockIOAccounting=yes".
 	//
