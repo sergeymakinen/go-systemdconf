@@ -2,7 +2,7 @@
 
 package conf
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // CoredumpFile represents coredump.conf, coredump.conf.d — Core dump storage configuration files
 // (see https://www.freedesktop.org/software/systemd/man/coredump.conf.html for details)

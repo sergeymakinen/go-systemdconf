@@ -2,7 +2,7 @@
 
 package network
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // DnssdFile represents systemd.dnssd — DNS-SD configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.dnssd.html for details)

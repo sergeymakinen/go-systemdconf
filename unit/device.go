@@ -2,7 +2,7 @@
 
 package unit
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // DeviceFile represents systemd.device — Device unit configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.device.html for details)

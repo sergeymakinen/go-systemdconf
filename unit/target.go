@@ -2,7 +2,7 @@
 
 package unit
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // TargetFile represents systemd.target — Target unit configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.target.html for details)

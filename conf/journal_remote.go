@@ -2,7 +2,7 @@
 
 package conf
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // JournalRemoteFile represents journal-remote.conf, journal-remote.conf.d — Configuration files for the service accepting remote journal uploads
 // (see https://www.freedesktop.org/software/systemd/man/journal-remote.conf.html for details)

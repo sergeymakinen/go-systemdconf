@@ -2,7 +2,7 @@
 
 package conf
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // LogindFile represents logind.conf, logind.conf.d — Login manager configuration files
 // (see https://www.freedesktop.org/software/systemd/man/logind.conf.html for details)

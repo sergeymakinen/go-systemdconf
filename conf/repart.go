@@ -2,7 +2,7 @@
 
 package conf
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // RepartFile represents repart.d — Partition Definition Files for Automatic Boot-Time Repartitioning
 // (see https://www.freedesktop.org/software/systemd/man/repart.d.html for details)

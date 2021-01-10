@@ -2,7 +2,7 @@
 
 package conf
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // SleepFile represents systemd-sleep.conf, sleep.conf.d — Suspend and hibernation configuration file
 // (see https://www.freedesktop.org/software/systemd/man/systemd-sleep.conf.html for details)

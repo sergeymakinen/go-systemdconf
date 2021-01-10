@@ -2,7 +2,7 @@
 
 package network
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // ResolvedFile represents resolved.conf, resolved.conf.d — Network Name Resolution configuration files
 // (see https://www.freedesktop.org/software/systemd/man/resolved.conf.html for details)

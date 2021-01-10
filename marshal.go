@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/sergeymakinen/go-systemdconf/ast"
+	"github.com/sergeymakinen/go-systemdconf/v2/ast"
 )
 
 var (

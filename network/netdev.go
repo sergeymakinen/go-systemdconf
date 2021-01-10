@@ -2,7 +2,7 @@
 
 package network
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // NetdevFile represents systemd.netdev — Virtual Network Device configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.netdev.html for details)

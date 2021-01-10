@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/sergeymakinen/go-systemdconf/cmd/internal"
+	"github.com/sergeymakinen/go-systemdconf/v2/cmd/internal"
 	"gopkg.in/yaml.v3"
 )
 
@@ -135,7 +135,7 @@ func (f configFile) String() string {
 	buf := strings.Builder{}
 	buf.WriteString("// DO NOT EDIT. This file is generated from " + systemdName + " by generatesdconf\n\n")
 	buf.WriteString("package " + path.Dir(f.Path) + "\n\n")
-	buf.WriteString("import \"github.com/sergeymakinen/go-systemdconf\"\n\n")
+	buf.WriteString("import \"github.com/sergeymakinen/go-systemdconf/v2\"\n\n")
 	for _, s := range f.Structs {
 		buf.WriteString(s.String() + "\n\n")
 	}

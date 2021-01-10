@@ -2,7 +2,7 @@
 
 package unit
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // AutomountFile represents systemd.automount — Automount unit configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.automount.html for details)

@@ -2,7 +2,7 @@
 
 package unit
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // SocketFile represents systemd.socket — Socket unit configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.socket.html for details)

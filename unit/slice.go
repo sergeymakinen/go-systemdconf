@@ -2,7 +2,7 @@
 
 package unit
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // SliceFile represents systemd.slice — Slice unit configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.slice.html for details)

@@ -2,7 +2,7 @@
 
 package network
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // NetworkFile represents systemd.network — Network configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.network.html for details)

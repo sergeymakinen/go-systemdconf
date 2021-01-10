@@ -2,7 +2,7 @@
 
 package conf
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // OomdFile represents oomd.conf, oomd.conf.d — Global systemd-oomd configuration files
 // (see https://www.freedesktop.org/software/systemd/man/oomd.conf.html for details)

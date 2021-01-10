@@ -2,7 +2,7 @@
 
 package unit
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // ServiceFile represents systemd.service — Service unit configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.service.html for details)

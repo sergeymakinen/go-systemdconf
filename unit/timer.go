@@ -2,7 +2,7 @@
 
 package unit
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // TimerFile represents systemd.timer — Timer unit configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.timer.html for details)

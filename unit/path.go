@@ -2,7 +2,7 @@
 
 package unit
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // PathFile represents systemd.path — Path unit configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.path.html for details)

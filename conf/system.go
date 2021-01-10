@@ -2,7 +2,7 @@
 
 package conf
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // SystemFile represents systemd-system.conf, system.conf.d, systemd-user.conf, user.conf.d — System and session service manager configuration files
 // (see https://www.freedesktop.org/software/systemd/man/systemd-system.conf.html for details)

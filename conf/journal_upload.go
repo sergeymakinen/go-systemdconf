@@ -2,7 +2,7 @@
 
 package conf
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // JournalUploadFile represents journal-upload.conf, journal-upload.conf.d — Configuration files for the journal upload service
 // (see https://www.freedesktop.org/software/systemd/man/journal-upload.conf.html for details)

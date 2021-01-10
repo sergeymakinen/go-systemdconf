@@ -1,4 +1,4 @@
-module github.com/sergeymakinen/go-systemdconf
+module github.com/sergeymakinen/go-systemdconf/v2
 
 go 1.12
 

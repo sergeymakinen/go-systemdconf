@@ -2,7 +2,7 @@
 
 package conf
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // JournaldFile represents journald.conf, journald.conf.d, journald@.conf — Journal service configuration files
 // (see https://www.freedesktop.org/software/systemd/man/journald.conf.html for details)

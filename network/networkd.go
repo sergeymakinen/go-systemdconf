@@ -2,7 +2,7 @@
 
 package network
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // NetworkdFile represents networkd.conf, networkd.conf.d — Global Network configuration files
 // (see https://www.freedesktop.org/software/systemd/man/networkd.conf.html for details)

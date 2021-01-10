@@ -2,7 +2,7 @@
 
 package conf
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // PstoreFile represents pstore.conf, pstore.conf.d — PStore configuration file
 // (see https://www.freedesktop.org/software/systemd/man/pstore.conf.html for details)

@@ -2,7 +2,7 @@
 
 package nspawn
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // NspawnFile represents systemd.nspawn — Container settings
 // (see https://www.freedesktop.org/software/systemd/man/systemd.nspawn.html for details)

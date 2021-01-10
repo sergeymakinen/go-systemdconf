@@ -2,7 +2,7 @@
 
 package unit
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // ExecOptions represents systemd.exec — Execution environment configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.exec.html for details)

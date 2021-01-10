@@ -2,7 +2,7 @@
 
 package unit
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // SwapFile represents systemd.swap — Swap unit configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.swap.html for details)

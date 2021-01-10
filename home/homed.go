@@ -2,7 +2,7 @@
 
 package home
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // HomedFile represents homed.conf, homed.conf.d — Home area/user account manager configuration files
 // (see https://www.freedesktop.org/software/systemd/man/homed.conf.html for details)

@@ -2,7 +2,7 @@
 
 package network
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // LinkFile represents systemd.link — Network device configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.link.html for details)

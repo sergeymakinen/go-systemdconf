@@ -2,7 +2,7 @@
 
 package unit
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // MountFile represents systemd.mount — Mount unit configuration
 // (see https://www.freedesktop.org/software/systemd/man/systemd.mount.html for details)

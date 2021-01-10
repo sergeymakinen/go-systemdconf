@@ -14,7 +14,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
-	"github.com/sergeymakinen/go-systemdconf/cmd/internal"
+	"github.com/sergeymakinen/go-systemdconf/v2/cmd/internal"
 	"golang.org/x/net/html"
 	"gopkg.in/yaml.v3"
 )

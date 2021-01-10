@@ -1,6 +1,6 @@
 # systemdconf
 
-[![Travis-CI](https://travis-ci.com/sergeymakinen/go-systemdconf.svg)](https://travis-ci.com/sergeymakinen/go-systemdconf) [![AppVeyor](https://ci.appveyor.com/api/projects/status/0hqjbq3cv2qefyb4/branch/master?svg=true)](https://ci.appveyor.com/project/sergeymakinen/go-systemdconf/branch/master) [![GoDoc](https://godoc.org/github.com/sergeymakinen/go-systemdconf?status.svg)](http://godoc.org/github.com/sergeymakinen/go-systemdconf) [![Report card](https://goreportcard.com/badge/github.com/sergeymakinen/go-systemdconf)](https://goreportcard.com/report/github.com/sergeymakinen/go-systemdconf)
+[![Travis-CI](https://travis-ci.com/sergeymakinen/go-systemdconf.svg)](https://travis-ci.com/sergeymakinen/go-systemdconf) [![AppVeyor](https://ci.appveyor.com/api/projects/status/0hqjbq3cv2qefyb4/branch/master?svg=true)](https://ci.appveyor.com/project/sergeymakinen/go-systemdconf/branch/master) [![GoDoc](https://godoc.org/github.com/sergeymakinen/go-systemdconf/v2?status.svg)](http://godoc.org/github.com/sergeymakinen/go-systemdconf/v2) [![Report card](https://goreportcard.com/badge/github.com/sergeymakinen/go-systemdconf/v2)](https://goreportcard.com/report/github.com/sergeymakinen/go-systemdconf/v2)
 
 Package systemdconf implements encoding and decoding of systemd configuration files
 as defined by systemd.syntax (see https://www.freedesktop.org/software/systemd/man/systemd.syntax.html for details).
@@ -13,13 +13,13 @@ in the documentation for the Marshal and Unmarshal functions
 Use go get:
 
 ```bash
-go get github.com/sergeymakinen/go-systemdconf
+go get github.com/sergeymakinen/go-systemdconf/v2
 ```
 
 Then import the package into your own code:
 
 ```go
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 ```
 
 

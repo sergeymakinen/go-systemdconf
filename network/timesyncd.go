@@ -2,7 +2,7 @@
 
 package network
 
-import "github.com/sergeymakinen/go-systemdconf"
+import "github.com/sergeymakinen/go-systemdconf/v2"
 
 // TimesyncdFile represents timesyncd.conf, timesyncd.conf.d — Network Time Synchronization configuration files
 // (see https://www.freedesktop.org/software/systemd/man/timesyncd.conf.html for details)

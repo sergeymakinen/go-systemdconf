@@ -5,8 +5,8 @@ package systemdconf_test
 import (
 	"fmt"
 
-	"github.com/sergeymakinen/go-systemdconf"
-	"github.com/sergeymakinen/go-systemdconf/unit"
+	"github.com/sergeymakinen/go-systemdconf/v2"
+	"github.com/sergeymakinen/go-systemdconf/v2/unit"
 )
 
 func ExampleMarshal() {

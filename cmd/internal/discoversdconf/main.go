@@ -13,7 +13,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/pkg/errors"
-	"github.com/sergeymakinen/go-systemdconf/cmd/internal"
+	"github.com/sergeymakinen/go-systemdconf/v2/cmd/internal"
 )
 
 func printUsage(w *os.File) {
