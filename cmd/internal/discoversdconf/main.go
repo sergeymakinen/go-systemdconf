@@ -87,7 +87,7 @@ func overview(cfgpath string) {
 		dgs = append(dgs, dg)
 	}
 	for _, dg := range dgs {
-		fmt.Printf("\n// - %s\n//   (see %s for details)\n", dg.Title, dg.URL)
+		fmt.Printf("\n%s\n", dg.Title)
 		for u, directives := range dg.Directives {
 			mark := ""
 			if cfg != nil {

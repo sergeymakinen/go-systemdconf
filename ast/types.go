@@ -1,4 +1,4 @@
-// Package ast contains a parser and a serializer for systemd configuration files through AST trees
+// Package ast contains a parser and a serializer for systemd configuration files through AST trees.
 package ast
 
 import "fmt"
