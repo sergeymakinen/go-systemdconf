@@ -1,6 +1,8 @@
 # systemdconf
 
-[![Travis-CI](https://travis-ci.com/sergeymakinen/go-systemdconf.svg)](https://travis-ci.com/sergeymakinen/go-systemdconf) [![AppVeyor](https://ci.appveyor.com/api/projects/status/0hqjbq3cv2qefyb4/branch/master?svg=true)](https://ci.appveyor.com/project/sergeymakinen/go-systemdconf/branch/master) [![GoDoc](https://godoc.org/github.com/sergeymakinen/go-systemdconf/v2?status.svg)](http://godoc.org/github.com/sergeymakinen/go-systemdconf/v2) [![Report card](https://goreportcard.com/badge/github.com/sergeymakinen/go-systemdconf/v2)](https://goreportcard.com/report/github.com/sergeymakinen/go-systemdconf/v2)
+[![Tests](https://github.com/sergeymakinen/go-systemdconf/workflows/Tests/badge.svg)](https://github.com/sergeymakinen/go-systemdconf/actions?query=workflow%3ATests)
+[![Go Reference](https://pkg.go.dev/badge/github.com/sergeymakinen/go-systemdconf.svg)](https://pkg.go.dev/github.com/sergeymakinen/go-systemdconf)
+[![Go Report Card](https://goreportcard.com/badge/github.com/sergeymakinen/go-systemdconf)](https://goreportcard.com/report/github.com/sergeymakinen/go-systemdconf)
 
 Package systemdconf implements encoding and decoding of systemd configuration files
 as defined by systemd.syntax (see https://www.freedesktop.org/software/systemd/man/systemd.syntax.html for details).
