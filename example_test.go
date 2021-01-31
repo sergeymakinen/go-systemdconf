@@ -30,7 +30,8 @@ func ExampleMarshal() {
 	b, _ := systemdconf.Marshal(service)
 
 	fmt.Println(string(b))
-	// Output: [Unit]
+	// Output:
+	// [Unit]
 	// Description=Simple firewall
 	//
 	// [Service]
@@ -65,6 +66,7 @@ WantedBy=multi-user.target`
 	if b {
 		fmt.Println(b)
 	}
-	// Output: Simple firewall
+	// Output:
+	// Simple firewall
 	// true
 }

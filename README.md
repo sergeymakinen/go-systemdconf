@@ -50,7 +50,8 @@ service := unit.ServiceFile{
 b, _ := systemdconf.Marshal(service)
 
 fmt.Println(string(b))
-// Output: [Unit]
+// Output: 
+// [Unit]
 // Description=Simple firewall
 //
 // [Service]
@@ -84,10 +85,9 @@ systemdconf.Unmarshal([]byte(file), &service)
 
 fmt.Println(service.Unit.Description)
 b, _ := service.Service.RemainAfterExit.Bool()
-if b {
-    fmt.Println(b)
-}
-// Output: Simple firewall
+fmt.Println(b)
+// Output: 
+// Simple firewall
 // true
 ```
 

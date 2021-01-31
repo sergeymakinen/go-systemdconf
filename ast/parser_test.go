@@ -12,7 +12,7 @@ import (
 func TestParseComplexFile(t *testing.T) {
 	b, err := ioutil.ReadFile("testdata/complex.conf")
 	if err != nil {
-		panic("Error reading testdata/complex.conf: " + err.Error())
+		panic("failed to read testdata/complex.conf: " + err.Error())
 	}
 	file, err := NewParser(bytes.NewReader(b)).Parse()
 	if err != nil {
@@ -190,7 +190,7 @@ func TestParseEdgeCases(t *testing.T) {
 		},
 	}
 	for _, td := range tests {
-		t.Run("Name="+td.Name, func(t *testing.T) {
+		t.Run(td.Name, func(t *testing.T) {
 			file, err := NewParser(strings.NewReader(td.Contents)).Parse()
 			if err2, ok := err.(*ParseError); ok {
 				err = err2.Err

@@ -11,11 +11,11 @@ import (
 func TestMarshalFile(t *testing.T) {
 	unmarshal, err := ioutil.ReadFile("testdata/unmarshal.conf")
 	if err != nil {
-		panic("Error reading testdata/unmarshal.conf: " + err.Error())
+		panic("failed to read testdata/unmarshal.conf: " + err.Error())
 	}
 	marshal, err := ioutil.ReadFile("testdata/marshal.conf")
 	if err != nil {
-		panic("Error reading testdata/marshal.conf: " + err.Error())
+		panic("failed to read testdata/marshal.conf: " + err.Error())
 	}
 	var s fileTest
 	err = Unmarshal(unmarshal, &s)
@@ -105,7 +105,7 @@ func TestMarshalShouldFail(t *testing.T) {
 		},
 	}
 	for _, td := range tests {
-		t.Run("Name="+td.Name, func(t *testing.T) {
+		t.Run(td.Name, func(t *testing.T) {
 			_, err := Marshal(td.V)
 			if err == nil || !strings.Contains(err.Error(), td.Expected) {
 				t.Errorf("Marshal() = _, %v; does not contain %s", err, td.Expected)
