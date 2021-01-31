@@ -1,5 +1,9 @@
-on: [push, pull_request]
-name: Tests
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 12 * * 4'
+name: tests
 jobs:
   Test:
     strategy:
@@ -10,6 +14,7 @@ jobs:
           - 1.13.x
           - 1.14.x
           - 1.15.x
+          - 1.x
         os:
           - ubuntu-latest
           - windows-latest
@@ -25,4 +30,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Test
-        run: go test ./...
+        run: go test -coverprofile=coverage.txt -covermode=atomic ./...
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1

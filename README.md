@@ -1,8 +1,9 @@
 # systemdconf
 
-[![Tests](https://github.com/sergeymakinen/go-systemdconf/workflows/Tests/badge.svg)](https://github.com/sergeymakinen/go-systemdconf/actions?query=workflow%3ATests)
+[![tests](https://github.com/sergeymakinen/go-systemdconf/workflows/tests/badge.svg)](https://github.com/sergeymakinen/go-systemdconf/actions?query=workflow%3Atests)
 [![Go Reference](https://pkg.go.dev/badge/github.com/sergeymakinen/go-systemdconf.svg)](https://pkg.go.dev/github.com/sergeymakinen/go-systemdconf/v2)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sergeymakinen/go-systemdconf)](https://goreportcard.com/report/github.com/sergeymakinen/go-systemdconf)
+[![codecov](https://codecov.io/gh/sergeymakinen/go-systemdconf/branch/master/graph/badge.svg)](https://codecov.io/gh/sergeymakinen/go-systemdconf)
 
 Package systemdconf implements encoding and decoding of systemd configuration files
 as defined by systemd.syntax (see https://www.freedesktop.org/software/systemd/man/systemd.syntax.html for details).
