@@ -1,7 +1,7 @@
 # systemdconf
 
-[![tests](https://github.com/sergeymakinen/go-systemdconf/workflows/tests/badge.svg)](https://github.com/sergeymakinen/go-systemdconf/actions?query=workflow%3Atests)
-[![Go Reference](https://pkg.go.dev/badge/github.com/sergeymakinen/go-systemdconf.svg)](https://pkg.go.dev/github.com/sergeymakinen/go-systemdconf/v2)
+[![Test](https://github.com/sergeymakinen/go-systemdconf/actions/workflows/test.yml/badge.svg)](https://github.com/sergeymakinen/go-systemdconf/actions/workflows/test.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/sergeymakinen/go-systemdconf.svg)](https://pkg.go.dev/github.com/sergeymakinen/go-systemdconf/v3)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sergeymakinen/go-systemdconf)](https://goreportcard.com/report/github.com/sergeymakinen/go-systemdconf)
 [![codecov](https://codecov.io/gh/sergeymakinen/go-systemdconf/branch/master/graph/badge.svg)](https://codecov.io/gh/sergeymakinen/go-systemdconf)
 
@@ -16,13 +16,13 @@ in the documentation for the Marshal and Unmarshal functions
 Use go get:
 
 ```bash
-go get github.com/sergeymakinen/go-systemdconf/v2
+go get github.com/sergeymakinen/go-systemdconf/v3
 ```
 
 Then import the package into your own code:
 
 ```go
-import "github.com/sergeymakinen/go-systemdconf/v2"
+import "github.com/sergeymakinen/go-systemdconf/v3"
 ```
 
 

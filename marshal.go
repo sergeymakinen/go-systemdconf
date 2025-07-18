@@ -2,13 +2,13 @@ package systemdconf
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 	"time"
 
-	"github.com/pkg/errors"
-	"github.com/sergeymakinen/go-systemdconf/v2/ast"
+	"github.com/sergeymakinen/go-systemdconf/v3/ast"
 )
 
 var (
@@ -18,17 +18,17 @@ var (
 	sectionType   = reflect.TypeOf((*Section)(nil)).Elem()
 )
 
-// Marshaler is the interface implemented by types that can marshal themselves into a systemd Value
+// Marshaler is the interface implemented by types that can marshal themselves into a systemd Value.
 type Marshaler interface {
 	MarshalSystemd() (Value, error)
 }
 
-// FieldError represents an error when marshalling/unmarshalling struct fields
+// FieldError represents an error when marshalling/unmarshalling struct fields.
 type FieldError struct {
-	Struct reflect.Type // Type of the struct containing the field
-	Field  string       // Name of the field
-	Type   reflect.Type // Type of the field
-	Err    error        // The actual error
+	Struct reflect.Type // type of the struct containing the field
+	Field  string       // name of the field
+	Type   reflect.Type // type of the field
+	Err    error        // the actual error
 }
 
 func (e *FieldError) Error() string {
@@ -53,17 +53,15 @@ func (e *FieldError) Error() string {
 //
 // 3) If the section value implements the Marshaler interface
 // and is not a nil pointer, Marshal calls its MarshalSystemd method
-// to produce a Value. If no MarshalSystemd method is present but the
-// value implements encoding.TextMarshaler instead, Marshal calls
-// its MarshalText method and uses the result as a single value.
-// If no MarshalText method is present, the value must be:
-// 	- boolean
-// 	- slice of booleans
-//	- string
-//	- slice of strings
-//	- time.Duration
-//	- slice of time.Durations
-//	- pointer to type above
+// to produce a Value.
+// If no MarshalSystemd method is present, the value must be:
+//   - boolean
+//   - slice of booleans
+//   - string
+//   - slice of strings
+//   - time.Duration
+//   - slice of time.Durations
+//   - pointer to type above
 //
 // The marshalling of each struct field can be customized by the format string
 // stored under the "systemd" key in the struct field's tag.
@@ -74,8 +72,8 @@ func (e *FieldError) Error() string {
 //
 // Pointer values resolve as the value pointed to.
 //
-// Interface values resolve as the value contained in the interface
-func Marshal(v interface{}) ([]byte, error) {
+// Interface values resolve as the value contained in the interface.
+func Marshal(v any) ([]byte, error) {
 	val := indirect(reflect.ValueOf(v))
 	if !val.IsValid() {
 		return nil, errors.New("expected value, got nil")
@@ -85,7 +83,7 @@ func Marshal(v interface{}) ([]byte, error) {
 		return nil, err
 	}
 	b := bytes.Buffer{}
-	if err = (&ast.Serializer{}).Serialize(file, &b); err != nil {
+	if err = (&ast.Printer{}).Fprint(&b, file); err != nil {
 		return nil, err
 	}
 	return b.Bytes(), nil
@@ -93,26 +91,28 @@ func Marshal(v interface{}) ([]byte, error) {
 
 func marshalFile(v reflect.Value) (*ast.File, error) {
 	if v.Kind() != reflect.Struct {
-		return nil, errors.Errorf("expected struct, got %s", v.Kind())
+		return nil, errors.New("expected struct, got " + v.Kind().String())
 	}
 	info, err := getTypeInfo(v.Type())
 	if err != nil {
 		return nil, err
 	}
 	file := &ast.File{}
-	for _, field := range info.Fields {
-		sv := indirect(v.FieldByIndex(field.Index))
+	for _, field := range info.fields {
+		sv := indirect(v.FieldByIndex(field.idx))
 		if !sv.IsValid() {
 			continue
 		}
-		section, err := marshalSection(field, sv)
+		sections, err := marshalSections(field, sv)
 		if err != nil {
 			return nil, err
 		}
-		file.Children = append(file.Children, section)
+		for _, section := range sections {
+			file.Children = append(file.Children, section)
+		}
 	}
-	if embedded := info.Embedded(fileType); embedded != nil {
-		fileVal := indirect(v.FieldByIndex(embedded.Index))
+	if embedded := info.embedded(fileType); embedded != nil {
+		fileVal := indirect(v.FieldByIndex(embedded.idx))
 		if fileVal.IsValid() {
 			for _, section := range fileToAstSections(fileVal.Interface().(File)) {
 				file.Children = append(file.Children, section)
@@ -122,19 +122,52 @@ func marshalFile(v reflect.Value) (*ast.File, error) {
 	return file, nil
 }
 
+func marshalSections(field *fieldInfo, v reflect.Value) ([]*ast.Section, error) {
+	switch v.Kind() {
+	case reflect.Struct:
+		section, err := marshalSection(field, v)
+		if err != nil {
+			return nil, err
+		}
+		if len(section.Children) == 0 {
+			return nil, nil
+		}
+		return []*ast.Section{section}, nil
+	case reflect.Array, reflect.Slice:
+		var sections []*ast.Section
+		for i := 0; i < v.Len(); i++ {
+			ev := indirect(v.Index(i))
+			if !ev.IsValid() {
+				continue
+			}
+			section, err := marshalSection(field, ev)
+			if err != nil {
+				return nil, err
+			}
+			if len(section.Children) == 0 {
+				continue
+			}
+			sections = append(sections, section)
+		}
+		return sections, nil
+	default:
+		return nil, errors.New("expected struct, slice, or array, got " + v.Kind().String())
+	}
+}
+
 func marshalSection(field *fieldInfo, v reflect.Value) (*ast.Section, error) {
 	if v.Kind() != reflect.Struct {
-		return nil, errors.Errorf("expected struct, got %s", v.Kind())
+		return nil, errors.New("expected struct, got " + v.Kind().String())
 	}
 	info, err := getTypeInfo(v.Type())
 	if err != nil {
 		return nil, err
 	}
 	section := &ast.Section{
-		Name: field.Name,
+		Name: field.name,
 	}
-	for _, field := range info.Fields {
-		sv := indirect(v.FieldByIndex(field.Index))
+	for _, field := range info.fields {
+		sv := indirect(v.FieldByIndex(field.idx))
 		if !sv.IsValid() {
 			continue
 		}
@@ -146,8 +179,8 @@ func marshalSection(field *fieldInfo, v reflect.Value) (*ast.Section, error) {
 			section.Children = append(section.Children, e)
 		}
 	}
-	if embedded := info.Embedded(sectionType); embedded != nil {
-		sectionVal := indirect(v.FieldByIndex(embedded.Index))
+	if embedded := info.embedded(sectionType); embedded != nil {
+		sectionVal := indirect(v.FieldByIndex(embedded.idx))
 		if sectionVal.IsValid() {
 			for _, entry := range sectionToAstEntries(sectionVal.Interface().(Section)) {
 				section.Children = append(section.Children, entry)
@@ -158,21 +191,21 @@ func marshalSection(field *fieldInfo, v reflect.Value) (*ast.Section, error) {
 }
 
 func marshalEntries(field *fieldInfo, v reflect.Value) ([]*ast.Entry, error) {
-	ft := indirectType(field.Type)
+	ft := indirectType(field.typ)
 	if v.CanInterface() && ft.Implements(marshalerType) {
 		value, err := v.Interface().(Marshaler).MarshalSystemd()
 		if err != nil {
 			return nil, &FieldError{
-				Struct: field.Struct,
-				Field:  field.Name,
-				Type:   field.Type,
-				Err:    errors.Wrap(err, "cannot marshal"),
+				Struct: field.strct,
+				Field:  field.name,
+				Type:   field.typ,
+				Err:    err,
 			}
 		}
 		var entries []*ast.Entry
 		for _, s := range value {
 			entries = append(entries, &ast.Entry{
-				Key:   field.Name,
+				Key:   field.name,
 				Value: s,
 			})
 		}
@@ -180,19 +213,19 @@ func marshalEntries(field *fieldInfo, v reflect.Value) ([]*ast.Entry, error) {
 	}
 	if ft == durationType {
 		return []*ast.Entry{{
-			Key:   field.Name,
+			Key:   field.name,
 			Value: FormatDuration(v.Interface().(time.Duration)),
 		}}, nil
 	}
 	switch ft.Kind() {
 	case reflect.Bool:
 		return []*ast.Entry{{
-			Key:   field.Name,
+			Key:   field.name,
 			Value: strconv.FormatBool(v.Bool()),
 		}}, nil
 	case reflect.String:
 		return []*ast.Entry{{
-			Key:   field.Name,
+			Key:   field.name,
 			Value: v.String(),
 		}}, nil
 	case reflect.Array, reflect.Slice:
@@ -205,7 +238,7 @@ func marshalEntries(field *fieldInfo, v reflect.Value) ([]*ast.Entry, error) {
 			}
 			if et == durationType {
 				entries = append(entries, &ast.Entry{
-					Key:   field.Name,
+					Key:   field.name,
 					Value: FormatDuration(ev.Interface().(time.Duration)),
 				})
 				continue
@@ -213,19 +246,19 @@ func marshalEntries(field *fieldInfo, v reflect.Value) ([]*ast.Entry, error) {
 			switch et.Kind() {
 			case reflect.Bool:
 				entries = append(entries, &ast.Entry{
-					Key:   field.Name,
+					Key:   field.name,
 					Value: strconv.FormatBool(ev.Bool()),
 				})
 			case reflect.String:
 				entries = append(entries, &ast.Entry{
-					Key:   field.Name,
+					Key:   field.name,
 					Value: ev.String(),
 				})
 			default:
 				return nil, &FieldError{
-					Struct: field.Struct,
-					Field:  field.Name,
-					Type:   field.Type,
+					Struct: field.strct,
+					Field:  field.name,
+					Type:   field.typ,
 					Err:    errors.New("unsupported type"),
 				}
 			}
@@ -233,9 +266,9 @@ func marshalEntries(field *fieldInfo, v reflect.Value) ([]*ast.Entry, error) {
 		return entries, nil
 	default:
 		return nil, &FieldError{
-			Struct: field.Struct,
-			Field:  field.Name,
-			Type:   field.Type,
+			Struct: field.strct,
+			Field:  field.name,
+			Type:   field.typ,
 			Err:    errors.New("unsupported type"),
 		}
 	}

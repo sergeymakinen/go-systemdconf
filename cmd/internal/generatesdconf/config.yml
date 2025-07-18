@@ -45,15 +45,15 @@ files:
         fields:
           Unit:
             type: UnitSection
-            comment: Generic information about the unit that is not dependent on the type of unit
+            comment: generic information about the unit that is not dependent on the type of unit
             short: true
           Service:
             type: ServiceSection
-            comment: Information about the service and the process it supervises
+            comment: information about the service and the process it supervises
             short: true
           Install:
             type: InstallSection
-            comment: Installation information for the unit
+            comment: installation information for the unit
             short: true
       ServiceSection:
         comment: information about the service and the process it supervises
@@ -73,15 +73,15 @@ files:
         fields:
           Unit:
             type: UnitSection
-            comment: Generic information about the unit that is not dependent on the type of unit
+            comment: generic information about the unit that is not dependent on the type of unit
             short: true
           Socket:
             type: SocketSection
-            comment: Information about the socket or FIFO it supervises
+            comment: information about the socket or FIFO it supervises
             short: true
           Install:
             type: InstallSection
-            comment: Installation information for the unit
+            comment: installation information for the unit
             short: true
       SocketSection:
         comment: information about the socket or FIFO it supervises
@@ -101,11 +101,11 @@ files:
         fields:
           Unit:
             type: UnitSection
-            comment: Generic information about the unit that is not dependent on the type of unit
+            comment: generic information about the unit that is not dependent on the type of unit
             short: true
           Install:
             type: InstallSection
-            comment: Installation information for the unit
+            comment: installation information for the unit
             short: true
   unit/mount.go:
     structs:
@@ -117,15 +117,15 @@ files:
         fields:
           Unit:
             type: UnitSection
-            comment: Generic information about the unit that is not dependent on the type of unit
+            comment: generic information about the unit that is not dependent on the type of unit
             short: true
           Mount:
             type: MountSection
-            comment: Information about the file system mount points it supervises
+            comment: information about the file system mount points it supervises
             short: true
           Install:
             type: InstallSection
-            comment: Installation information for the unit
+            comment: installation information for the unit
             short: true
       MountSection:
         comment: information about the file system mount points it supervises
@@ -145,15 +145,15 @@ files:
         fields:
           Unit:
             type: UnitSection
-            comment: Generic information about the unit that is not dependent on the type of unit
+            comment: generic information about the unit that is not dependent on the type of unit
             short: true
           Automount:
             type: AutomountSection
-            comment: Information about the file system automount points it supervises
+            comment: information about the file system automount points it supervises
             short: true
           Install:
             type: InstallSection
-            comment: Installation information for the unit
+            comment: installation information for the unit
             short: true
       AutomountSection:
         comment: information about the file system automount points it supervises
@@ -169,15 +169,15 @@ files:
         fields:
           Unit:
             type: UnitSection
-            comment: Generic information about the unit that is not dependent on the type of unit
+            comment: generic information about the unit that is not dependent on the type of unit
             short: true
           Swap:
             type: SwapSection
-            comment: Information about the swap device it supervises
+            comment: information about the swap device it supervises
             short: true
           Install:
             type: InstallSection
-            comment: Installation information for the unit
+            comment: installation information for the unit
             short: true
       SwapSection:
         comment: information about the swap device it supervises
@@ -197,11 +197,11 @@ files:
         fields:
           Unit:
             type: UnitSection
-            comment: Generic information about the unit that is not dependent on the type of unit
+            comment: generic information about the unit that is not dependent on the type of unit
             short: true
           Install:
             type: InstallSection
-            comment: Installation information for the unit
+            comment: installation information for the unit
             short: true
   unit/path.go:
     structs:
@@ -213,15 +213,15 @@ files:
         fields:
           Unit:
             type: UnitSection
-            comment: Generic information about the unit that is not dependent on the type of unit
+            comment: generic information about the unit that is not dependent on the type of unit
             short: true
           Path:
             type: PathSection
-            comment: Information about the path(s) it monitors
+            comment: information about the path(s) it monitors
             short: true
           Install:
             type: InstallSection
-            comment: Installation information for the unit
+            comment: installation information for the unit
             short: true
       PathSection:
         comment: information about the path(s) it monitors
@@ -237,15 +237,15 @@ files:
         fields:
           Unit:
             type: UnitSection
-            comment: Generic information about the unit that is not dependent on the type of unit
+            comment: generic information about the unit that is not dependent on the type of unit
             short: true
           Timer:
             type: TimerSection
-            comment: Information about the timer it defines
+            comment: information about the timer it defines
             short: true
           Install:
             type: InstallSection
-            comment: Installation information for the unit
+            comment: installation information for the unit
             short: true
       TimerSection:
         comment: information about the timer it defines
@@ -261,19 +261,52 @@ files:
         fields:
           Unit:
             type: UnitSection
-            comment: Generic information about the unit that is not dependent on the type of unit
+            comment: generic information about the unit that is not dependent on the type of unit
             short: true
           Install:
             type: InstallSection
-            comment: Installation information for the unit
+            comment: installation information for the unit
             short: true
+          Slice:
+            type: SliceSection
+            comment: "[Slice] section"
+            short: true
+      SliceSection:
+        comment: "[Slice] section"
+        embedded:
+          - systemdconf.Section
+          - ResourceControlOptions
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.slice.html#Options
+  unit/scope.go:
+    structs:
+      ScopeFile:
+        comment: |-
+          systemd.scope — Scope unit configuration
+          (see https://www.freedesktop.org/software/systemd/man/systemd.scope.html for details)
+        embedded: systemdconf.File
+        fields:
+          Unit:
+            type: UnitSection
+            comment: generic information about the unit that is not dependent on the type of unit
+            short: true
+          Scope:
+            type: ScopeSection
+            comment: information about the scope and the units it contains
+            short: true
+      ScopeSection:
+        comment: information about the scope and the units it contains
+        embedded:
+          - systemdconf.Section
+          - KillOptions
+          - ResourceControlOptions
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.scope.html#Options
 
   network/timesyncd.go:
     comment: |-
       timesyncd.conf, timesyncd.conf.d — Network Time Synchronization configuration files
       (see https://www.freedesktop.org/software/systemd/man/timesyncd.conf.html for details)
     structs:
-      .Resolve:
+      .Time:
         fields: https://www.freedesktop.org/software/systemd/man/timesyncd.conf.html#Options
   network/resolved.go:
     comment: |-
@@ -289,9 +322,21 @@ files:
     structs:
       .Network:
         fields: https://www.freedesktop.org/software/systemd/man/networkd.conf.html#%5BNetwork%5D%20Section%20Options
-      .DHCP:
-        comment: DHCP Unique Identifier (DUID) value used by DHCP protocol
-        fields: https://www.freedesktop.org/software/systemd/man/networkd.conf.html#%5BDHCP%5D%20Section%20Options
+      .IPv6AcceptRA:
+        comment: the default setting of the Neighbor Discovery
+        fields: https://www.freedesktop.org/software/systemd/man/networkd.conf.html#%5BIPv6AcceptRA%5D%20Section%20Options
+      .IPv6AddressLabel:
+        multiple: true
+        fields: https://www.freedesktop.org/software/systemd/man/networkd.conf.html#%5BIPv6AddressLabel%5D%20Section%20Options
+      .DHCPv4:
+        comment: the DHCP Unique Identifier (DUID) value used by DHCP protocol
+        fields: https://www.freedesktop.org/software/systemd/man/networkd.conf.html#%5BDHCPv4%5D%20Section%20Options
+      .DHCPv6:
+        comment: the DHCP Unique Identifier (DUID) value used by DHCPv6 protocol
+        fields: https://www.freedesktop.org/software/systemd/man/networkd.conf.html#%5BDHCPv6%5D%20Section%20Options
+      .DHCPServer:
+        comment: the default setting of the DHCP server
+        fields: https://www.freedesktop.org/software/systemd/man/networkd.conf.html#%5BDHCPServer%5D%20Section%20Options
   network/link.go:
     comment: |-
       systemd.link — Network device configuration
@@ -301,9 +346,15 @@ files:
         comment: "[Match] section, which determines if a given link file may be applied to a given device"
         fields: https://www.freedesktop.org/software/systemd/man/systemd.link.html#%5BMatch%5D%20Section%20Options
       .Link:
-        comment: "[Link] section specifying how the device should be configured"
+        comment: "[Link] section, which specifies how the device should be configured"
         fields: https://www.freedesktop.org/software/systemd/man/systemd.link.html#%5BLink%5D%20Section%20Options
+      .SRIOV:
+        name: SR-IOV
+        multiple: true
+        comment: "[SR-IOV] section, which provides the ability to partition a single physical PCI resource into virtual PCI functions which can then be e.g. injected into a VM"
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.link.html#%5BSR-IOV%5D%20Section%20Options
   network/dnssd.go:
+    name: DNSSD
     comment: |-
       systemd.dnssd — DNS-SD configuration
       (see https://www.freedesktop.org/software/systemd/man/systemd.dnssd.html for details)
@@ -317,145 +368,174 @@ files:
       (see https://www.freedesktop.org/software/systemd/man/systemd.network.html for details)
     structs:
       .Match:
-        comment: "[Match] section, which determines if a given network file may be applied to a given device"
+        comment: "[Match] section, which determines if a given network file may be applied to a given interface"
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BMatch%5D%20Section%20Options
       .Link:
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BLink%5D%20Section%20Options
       .SRIOV:
         name: SR-IOV
+        multiple: true
+        comment: "[SR-IOV] section, which provides the ability to partition a single physical PCI resource into virtual PCI functions which can then be e.g. injected into a VM"
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BSR-IOV%5D%20Section%20Options
       .Network:
-        comment: "[Network] section specifying how the device should be configured"
+        comment: "[Network] section specifying how the interface should be configured"
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BNetwork%5D%20Section%20Options
       .Address:
+        multiple: true
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BAddress%5D%20Section%20Options
       .Neighbor:
-        comment: permanent, static entry to the neighbor table (IPv6) or ARP table (IPv4) for the given hardware address on the links matched for the network
+        multiple: true
+        comment: "[Neighbor] section, which adds a permanent, static entry to the neighbor table (IPv6) or ARP table (IPv4) for the given hardware address on the links matched for the network"
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BNeighbor%5D%20Section%20Options
       .IPv6AddressLabel:
+        multiple: true
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BIPv6AddressLabel%5D%20Section%20Options
       .RoutingPolicyRule:
+        multiple: true
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BRoutingPolicyRule%5D%20Section%20Options
       .NextHop:
-        comment: entries in the kernel's "nexthop" tables
+        multiple: true
+        comment: "[NextHop] section, which is used to manipulate entries in the kernel's \"nexthop\" tables"
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BNextHop%5D%20Section%20Options
       .Route:
+        multiple: true
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BRoute%5D%20Section%20Options
       .DHCPv4:
-        comment: DHCPv4 client
+        comment: the DHCPv4 client, if it is enabled with the DHCP= setting
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BDHCPv4%5D%20Section%20Options
       .DHCPv6:
-        comment: DHCPv6 client
+        comment: the DHCPv6 client, if it is enabled with the DHCP= setting, or invoked by the IPv6 Router Advertisement
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BDHCPv6%5D%20Section%20Options
-      .DHCPv6PrefixDelegation:
-        comment: delegated prefixes assigned by DHCPv6 server
-        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BDHCPv6PrefixDelegation%5D%20Section%20Options
+      .DHCPPrefixDelegation:
+        comment: subnet prefixes of the delegated prefixes acquired by a DHCPv6 client or by a DHCPv4 client through the 6RD option on another interface
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BDHCPPrefixDelegation%5D%20Section%20Options
       .IPv6AcceptRA:
-        comment: IPv6 Router Advertisement (RA) client
+        comment: the IPv6 Router Advertisement (RA) client, if it is enabled with the IPv6AcceptRA= setting
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BIPv6AcceptRA%5D%20Section%20Options
       .DHCPServer:
-        comment: DHCP server
+        comment: settings for the DHCP server, if enabled via the DHCPServer= option
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BDHCPServer%5D%20Section%20Options
+      .DHCPServerStaticLease:
+        multiple: true
+        comment: a static DHCP lease to assign a fixed IPv4 address to a specific device based on its MAC address
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BDHCPServerStaticLease%5D%20Section%20Options
       .IPv6SendRA:
-        comment: settings for sending IPv6 Router Advertisements and whether to act as a router
+        comment: settings for sending IPv6 Router Advertisements and whether to act as a router, if enabled via the IPv6SendRA option
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BIPv6SendRA%5D%20Section%20Options
       .IPv6Prefix:
-        comment: IPv6 prefix that are announced via Router Advertisements
+        multiple: true
+        comment: an IPv6 prefix that is announced via Router Advertisements
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BIPv6Prefix%5D%20Section%20Options
       .IPv6RoutePrefix:
-        comment: IPv6 prefix route that are announced via Router Advertisements
+        multiple: true
+        comment: an IPv6 prefix route that is announced via Router Advertisements
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BIPv6RoutePrefix%5D%20Section%20Options
+      .IPv6PREF64Prefix:
+        multiple: true
+        comment: an IPv6 PREF64 (or NAT64) prefix that is announced via Router Advertisements
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BIPv6PREF64Prefix%5D%20Section%20Options
       .Bridge:
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BBridge%5D%20Section%20Options
       .BridgeFDB:
-        comment: forwarding database table of a port
+        multiple: true
+        comment: the forwarding database table of a port and accepts the following keys
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BBridgeFDB%5D%20Section%20Options
       .BridgeMDB:
-        comment: multicast membership entries forwarding database table of a port
+        multiple: true
+        comment: the multicast membership entries forwarding database table of a port
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BBridgeMDB%5D%20Section%20Options
       .LLDP:
-        comment: Link Layer Discovery Protocol (LLDP)
+        comment: the Link Layer Discovery Protocol (LLDP)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BLLDP%5D%20Section%20Options
       .CAN:
-        comment: Controller Area Network (CAN bus)
+        comment: the Controller Area Network (CAN bus)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BCAN%5D%20Section%20Options
+      .IPoIB:
+        comment: the IP over Infiniband
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BIPoIB%5D%20Section%20Options
       .QDisc:
-        comment: traffic control queueing discipline (qdisc)
+        comment: the traffic control queueing discipline (qdisc)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BQDisc%5D%20Section%20Options
       .NetworkEmulator:
-        comment: queueing discipline (qdisc) of the network emulator
+        comment: the queueing discipline (qdisc) of the network emulator
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BNetworkEmulator%5D%20Section%20Options
       .TokenBucketFilter:
-        comment: queueing discipline (qdisc) of token bucket filter (tbf)
+        comment: the queueing discipline (qdisc) of token bucket filter (tbf)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BTokenBucketFilter%5D%20Section%20Options
       .PIE:
-        comment: queueing discipline (qdisc) of Proportional Integral controller-Enhanced (PIE)
+        comment: the queueing discipline (qdisc) of Proportional Integral controller-Enhanced (PIE)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BPIE%5D%20Section%20Options
       .FlowQueuePIE:
-        comment: queueing discipline (qdisc) of Flow Queue Proportional Integral controller-Enhanced (fq_pie)
+        comment: the queueing discipline (qdisc) of Flow Queue Proportional Integral controller-Enhanced (fq_pie)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BFlowQueuePIE%5D%20Section%20Options
       .StochasticFairBlue:
-        comment: queueing discipline (qdisc) of stochastic fair blue (sfb)
+        comment: the queueing discipline (qdisc) of stochastic fair blue (sfb)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BStochasticFairBlue%5D%20Section%20Options
       .StochasticFairnessQueueing:
-        comment: queueing discipline (qdisc) of stochastic fairness queueing (sfq)
+        comment: the queueing discipline (qdisc) of stochastic fairness queueing (sfq)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BStochasticFairnessQueueing%5D%20Section%20Options
       .BFIFO:
-        comment: queueing discipline (qdisc) of Byte limited Packet First In First Out (bfifo)
+        comment: the queueing discipline (qdisc) of Byte limited Packet First In First Out (bfifo)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BBFIFO%5D%20Section%20Options
       .PFIFO:
-        comment: queueing discipline (qdisc) of Packet First In First Out (pfifo)
+        comment: the queueing discipline (qdisc) of Packet First In First Out (pfifo)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BPFIFO%5D%20Section%20Options
       .PFIFOHeadDrop:
-        comment: queueing discipline (qdisc) of Packet First In First Out Head Drop (pfifo_head_drop)
+        comment: the queueing discipline (qdisc) of Packet First In First Out Head Drop (pfifo_head_drop)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BPFIFOHeadDrop%5D%20Section%20Options
       .PFIFOFast:
-        comment: queueing discipline (qdisc) of Packet First In First Out Fast (pfifo_fast)
+        comment: the queueing discipline (qdisc) of Packet First In First Out Fast (pfifo_fast)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BPFIFOFast%5D%20Section%20Options
       .CAKE:
-        comment: queueing discipline (qdisc) of Common Applications Kept Enhanced (CAKE)
+        comment: the queueing discipline (qdisc) of Common Applications Kept Enhanced (CAKE)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BCAKE%5D%20Section%20Options
       .ControlledDelay:
-        comment: queueing discipline (qdisc) of controlled delay (CoDel)
+        comment: the queueing discipline (qdisc) of controlled delay (CoDel)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BControlledDelay%5D%20Section%20Options
       .DeficitRoundRobinScheduler:
-        comment: queueing discipline (qdisc) of Deficit Round Robin Scheduler (DRR)
+        comment: the queueing discipline (qdisc) of Deficit Round Robin Scheduler (DRR)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BDeficitRoundRobinScheduler%5D%20Section%20Options
       .DeficitRoundRobinSchedulerClass:
-        comment: traffic control class of Deficit Round Robin Scheduler (DRR)
+        comment: the traffic control class of Deficit Round Robin Scheduler (DRR)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BDeficitRoundRobinSchedulerClass%5D%20Section%20Options
       .EnhancedTransmissionSelection:
-        comment: queueing discipline (qdisc) of Enhanced Transmission Selection (ETS)
+        comment: the queueing discipline (qdisc) of Enhanced Transmission Selection (ETS)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BEnhancedTransmissionSelection%5D%20Section%20Options
       .GenericRandomEarlyDetection:
-        comment: queueing discipline (qdisc) of Generic Random Early Detection (GRED)
+        comment: the queueing discipline (qdisc) of Generic Random Early Detection (GRED)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BGenericRandomEarlyDetection%5D%20Section%20Options
       .FairQueueingControlledDelay:
-        comment: queueing discipline (qdisc) of fair queuing controlled delay (FQ-CoDel)
+        comment: the queueing discipline (qdisc) of fair queuing controlled delay (FQ-CoDel)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BFairQueueingControlledDelay%5D%20Section%20Options
       .FairQueueing:
-        comment: queueing discipline (qdisc) of fair queue traffic policing (FQ)
+        comment: the queueing discipline (qdisc) of fair queue traffic policing (FQ)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BFairQueueing%5D%20Section%20Options
       .TrivialLinkEqualizer:
-        comment: queueing discipline (qdisc) of trivial link equalizer (teql)
+        comment: the queueing discipline (qdisc) of trivial link equalizer (teql)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BTrivialLinkEqualizer%5D%20Section%20Options
       .HierarchyTokenBucket:
-        comment: queueing discipline (qdisc) of hierarchy token bucket (htb)
+        comment: the queueing discipline (qdisc) of hierarchy token bucket (htb)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BHierarchyTokenBucket%5D%20Section%20Options
       .HierarchyTokenBucketClass:
-        comment: traffic control class of hierarchy token bucket (htb)
+        comment: the traffic control class of hierarchy token bucket (htb)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BHierarchyTokenBucketClass%5D%20Section%20Options
+      .ClassfulMultiQueueing:
+        comment: the queueing discipline (qdisc) of Classful Multi Queueing (mq)
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BClassfulMultiQueueing%5D%20Section%20Options
+      .BandMultiQueueing:
+        comment: the queueing discipline (qdisc) of Band Multi Queueing (multiq)
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BBandMultiQueueing%5D%20Section%20Options
       .HeavyHitterFilter:
-        comment: queueing discipline (qdisc) of Heavy Hitter Filter (hhf)
+        comment: the queueing discipline (qdisc) of Heavy Hitter Filter (hhf)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BHeavyHitterFilter%5D%20Section%20Options
       .QuickFairQueueing:
-        comment: queueing discipline (qdisc) of Quick Fair Queueing (QFQ)
+        comment: the queueing discipline (qdisc) of Quick Fair Queueing (QFQ)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BQuickFairQueueing%5D%20Section%20Options
       .QuickFairQueueingClass:
-        comment: traffic control class of Quick Fair Queueing (qfq)
+        comment: the traffic control class of Quick Fair Queueing (qfq)
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BQuickFairQueueingClass%5D%20Section%20Options
       .BridgeVLAN:
-        comment: VLAN ID configuration of a bridge port
+        comment: the VLAN ID configuration of a bridge master or port
         fields: https://www.freedesktop.org/software/systemd/man/systemd.network.html#%5BBridgeVLAN%5D%20Section%20Options
   network/netdev.go:
     comment: |-
@@ -463,84 +543,94 @@ files:
       (see https://www.freedesktop.org/software/systemd/man/systemd.netdev.html for details)
     structs:
       .Match:
-        comment: "[Match] section. A virtual network device is only created if the [Match] section matches the current environment, or if the section is empty"
+        comment: a virtual network device
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMatch%5D%20Section%20Options
       .NetDev:
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BNetDev%5D%20Section%20Options
       .Bridge:
-        comment: netdevs of kind "bridge"
+        comment: '[Bridge] section, which only applies to netdevs of kind "bridge"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BBridge%5D%20Section%20Options
       .VLAN:
-        comment: netdevs of kind "vlan"
+        comment: '[VLAN] section, which only applies to netdevs of kind "vlan"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BVLAN%5D%20Section%20Options
       .MACVLAN:
-        comment: netdevs of kind "macvlan"
+        comment: '[MACVLAN] section, which only applies to netdevs of kind "macvlan"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMACVLAN%5D%20Section%20Options
       .MACVTAP:
-        comment: netdevs of kind "macvtap"
+        comment: '[MACVTAP] section, which only applies to netdevs of kind "macvtap"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMACVLAN%5D%20Section%20Options
       .IPVLAN:
-        comment: netdevs of kind "ipvlan"
+        comment: '[IPVLAN] section, which only applies to netdevs of kind "ipvlan"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BIPVLAN%5D%20Section%20Options
       .IPVTAP:
-        comment: netdevs of kind "ipvtap"
+        comment: '[IPVTAP] section, which only applies to netdevs of kind "ipvtap"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BIPVLAN%5D%20Section%20Options
       .VXLAN:
-        comment: netdevs of kind "vxlan"
+        comment: '[VXLAN] section, which only applies to netdevs of kind "vxlan"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BVXLAN%5D%20Section%20Options
       .GENEVE:
-        comment: netdevs of kind "geneve"
+        comment: '[GENEVE] section, which only applies to netdevs of kind "geneve"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BGENEVE%5D%20Section%20Options
       .BareUDP:
-        comment: netdevs of kind "bareudp"
+        comment: '[BareUDP] section, which only applies to netdevs of kind "bareudp"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BBareUDP%5D%20Section%20Options
       .L2TP:
-        comment: netdevs of kind "l2tp"
+        comment: '[L2TP] section, which only applies to netdevs of kind "l2tp"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BL2TP%5D%20Section%20Options
       .L2TPSession:
-        comment: netdevs of kind "l2tp"
+        comment: '[L2TPSession] section, which only applies to netdevs of kind "l2tp"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BL2TPSession%5D%20Section%20Options
       .MACsec:
-        comment: netdevs of kind "macsec"
+        comment: '[MACsec] section, which only applies to network devices of kind "macsec"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMACsec%5D%20Section%20Options
       .MACsecReceiveChannel:
-        comment: netdevs of kind "macsec"
+        comment: '[MACsecReceiveChannel] section, which only applies to network devices of kind "macsec"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMACsecReceiveChannel%5D%20Section%20Options
       .MACsecTransmitAssociation:
-        comment: netdevs of kind "macsec"
+        comment: '[MACsecTransmitAssociation] section, which only applies to network devices of kind "macsec"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMACsecTransmitAssociation%5D%20Section%20Options
       .MACsecReceiveAssociation:
-        comment: netdevs of kind "macsec"
+        comment: '[MACsecReceiveAssociation] section, which only applies to network devices of kind "macsec"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BMACsecReceiveAssociation%5D%20Section%20Options
       .Tunnel:
-        comment: TODO
+        comment: '[Tunnel] section, which only applies to netdevs of kind "ipip", "sit", "gre", "gretap", "ip6gre", "ip6gretap", "vti", "vti6", "ip6tnl", and "erspan"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BTunnel%5D%20Section%20Options
       .FooOverUDP:
-        comment: netdevs of kind "fou"
+        comment: '[FooOverUDP] section, which only applies to netdevs of kind "fou"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BFooOverUDP%5D%20Section%20Options
       .Peer:
-        comment: netdevs of kind "veth"
+        comment: '[Peer] section, which only applies to netdevs of kind "veth"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BPeer%5D%20Section%20Options
       .VXCAN:
-        comment: netdevs of kind "vxcan"
+        comment: '[VXCAN] section, which only applies to netdevs of kind "vxcan"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BVXCAN%5D%20Section%20Options
       .Tun:
-        comment: netdevs of kind "tun"
+        comment: '[Tun] section, which only applies to netdevs of kind "tun"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BTun%5D%20Section%20Options
       .Tap:
-        comment: netdevs of kind "tap"
+        comment: '[Tap] section, which only applies to netdevs of kind "tap"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BTun%5D%20Section%20Options
       .WireGuard:
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BWireGuard%5D%20Section%20Options
       .WireGuardPeer:
+        multiple: true
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BWireGuardPeer%5D%20Section%20Options
       .Bond:
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BBond%5D%20Section%20Options
       .Xfrm:
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BXfrm%5D%20Section%20Options
       .VRF:
-        comment: netdevs of kind "vrf"
+        comment: '[VRF] section, which only applies to netdevs of kind "vrf"'
         fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BVRF%5D%20Section%20Options
+      .BatmanAdvanced:
+        comment: '[BatmanAdvanced] section, which only applies to netdevs of kind "batadv"'
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BBatmanAdvanced%5D%20Section%20Options
+      .IPoIB:
+        comment: '[IPoIB] section, which only applies to netdevs of kind "ipoib"'
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BIPoIB%5D%20Section%20Options
+      .WLAN:
+        comment: "[WLAN] section, which only applies to WLAN interfaces"
+        fields: https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BWLAN%5D%20Section%20Options
 
   nspawn/nspawn.go:
     comment: |-
@@ -595,7 +685,6 @@ files:
       (see https://www.freedesktop.org/software/systemd/man/systemd-sleep.conf.html for details)
     structs:
       .Sleep:
-        comment: what strings will be written to /sys/power/disk and /sys/power/state by systemd-sleep when systemd attempts to suspend or hibernate the machine
         fields: https://www.freedesktop.org/software/systemd/man/systemd-sleep.conf.html#Options
   conf/journal_remote.go:
     name: JournalRemote
@@ -637,8 +726,14 @@ files:
       (see https://www.freedesktop.org/software/systemd/man/systemd-system.conf.html for details)
     structs:
       .Manager:
-        comment: few settings controlling basic manager operations
-        fields: https://www.freedesktop.org/software/systemd/man/systemd-system.conf.html#Options
+        comment: settings controlling basic manager operations
+        fields:
+          - https://www.freedesktop.org/software/systemd/man/systemd-system.conf.html#Options
+          - https://www.freedesktop.org/software/systemd/man/systemd-system.conf.html#Resource%20Management
+          - https://www.freedesktop.org/software/systemd/man/systemd-system.conf.html#Hardware%20Watchdog
+          - https://www.freedesktop.org/software/systemd/man/systemd-system.conf.html#Security
+          - https://www.freedesktop.org/software/systemd/man/systemd-system.conf.html#Timeouts%20and%20Rate%20Limits
+          - https://www.freedesktop.org/software/systemd/man/systemd-system.conf.html#Environment
   conf/pstore.go:
     comment: |-
       pstore.conf, pstore.conf.d — PStore configuration file
@@ -647,3 +742,51 @@ files:
       .PStore:
         comment: behavior of systemd-pstore, a tool for archiving the contents of the persistent storage filesystem, pstore
         fields: https://www.freedesktop.org/software/systemd/man/pstore.conf.html#Options
+  conf/sysupdate.go:
+    comment: |-
+      sysupdate.d — Transfer Definition Files for Automatic Updates
+      (see https://www.freedesktop.org/software/systemd/man/sysupdate.d.html for details)
+    structs:
+      .Transfer:
+        comment: general properties of this transfer
+        fields: https://www.freedesktop.org/software/systemd/man/sysupdate.d.html#%5BTransfer%5D%20Section%20Options
+      .Source:
+        comment: properties of the transfer source
+        fields: https://www.freedesktop.org/software/systemd/man/sysupdate.d.html#%5BSource%5D%20Section%20Options
+      .Target:
+        comment: properties of the transfer target
+        fields: https://www.freedesktop.org/software/systemd/man/sysupdate.d.html#%5BTarget%5D%20Section%20Options
+  conf/sysupdate_features.go:
+    name: SysupdateFeatures
+    comment: |-
+      sysupdate.features — Definition Files for Optional Features
+      (see https://www.freedesktop.org/software/systemd/man/sysupdate.features.html for details)
+    structs:
+      .Feature:
+        comment: general properties of this feature
+        fields: https://www.freedesktop.org/software/systemd/man/sysupdate.features.html#%5BFeature%5D%20Section%20Options
+  conf/ukify.go:
+    comment: |-
+      ukify — Combine components into a signed Unified Kernel Image for UEFI systems
+      (see https://www.freedesktop.org/software/systemd/man/ukify.html for details)
+    structs:
+      .UKI:
+        fields:
+          - url: https://www.freedesktop.org/software/systemd/man/ukify.html#%5BUKI%5D%20section
+            refsect: refsect2
+            header: h3
+      PCRSignatureSection:
+        comment: "[PCRSignature:NAME] section"
+        embedded: systemdconf.Section
+        fields:
+          - url: https://www.freedesktop.org/software/systemd/man/ukify.html#%5BPCRSignature:NAME%5D%20section
+            refsect: refsect2
+            header: h3
+  conf/iocost.go:
+    comment: |-
+      iocost.conf — Configuration files for the iocost solution manager
+      (see https://www.freedesktop.org/software/systemd/man/iocost.conf.html for details)
+    structs:
+      .IOCost:
+        comment: behavior of "iocost", a tool mostly used by systemd-udevd rules to automatically apply I/O cost solutions to /sys/fs/cgroup/io.cost.*
+        fields: https://www.freedesktop.org/software/systemd/man/iocost.conf.html#Options

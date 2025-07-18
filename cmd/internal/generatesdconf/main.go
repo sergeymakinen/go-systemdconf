@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,8 +12,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/olekukonko/tablewriter"
-	"github.com/pkg/errors"
-	"github.com/sergeymakinen/go-systemdconf/v2/cmd/internal"
+	"github.com/sergeymakinen/go-systemdconf/v3/cmd/internal/common"
 	"golang.org/x/net/html"
 	"gopkg.in/yaml.v3"
 )
@@ -38,72 +36,52 @@ func main() {
 		usage()
 	}
 	cfgpath := flag.Arg(0)
-	if !internal.Exist(cfgpath) {
+	if !common.Exist(cfgpath) {
 		log.Fatalf("config %q not found", cfgpath)
 	}
-	b, err := ioutil.ReadFile(cfgpath)
+	b, err := os.ReadFile(cfgpath)
 	if err != nil {
-		log.Fatal(errors.Wrapf(err, "failed to read %q", cfgpath))
+		log.Fatalf("failed to read %q: %v", cfgpath, err)
 	}
 	var conf config
 	if err := yaml.Unmarshal(b, &conf); err != nil {
-		log.Fatal(errors.Wrap(err, "failed to parse config"))
+		log.Fatalf("failed to parse config: %v", err)
 	}
 	outdir := flag.Arg(1)
-	if !internal.Exist(outdir) {
+	if !common.Exist(outdir) {
 		log.Fatalf("not found outdir %q", outdir)
 	}
-	man, err := goquery.NewDocumentFromReader(internal.Read("https://www.freedesktop.org/software/systemd/man/index.html"))
+	man, err := goquery.NewDocumentFromReader(common.Read("https://www.freedesktop.org/software/systemd/man/index.html"))
 	if err != nil {
 		log.Fatal(err)
 	}
-	systemdName = man.Find("body > span").Text()
+	systemdName = strings.SplitN(man.Find("body > span").Text(), ".", 2)[0]
 	if systemdName == "" || !strings.HasPrefix(systemdName, "systemd") {
 		log.Fatal("no systemd version")
 	}
 	for _, file := range conf.Files {
 		filename := filepath.Join(outdir, file.Path)
-		if err := ioutil.WriteFile(filename, []byte(file.String()), 0644); err != nil {
-			log.Fatal(errors.Wrapf(err, "failed to write %q", filename))
+		if err := os.WriteFile(filename, []byte(file.String()), 0644); err != nil {
+			log.Fatalf("failed to write %q: %v", filename, err)
 		}
 	}
 }
 
 var (
-	spaceRE         = regexp.MustCompile(`\s+`)
-	newlineRE       = regexp.MustCompile(`[\n]{2,}`)
-	leadingSpaceRE  = regexp.MustCompile(`\n[ ]+`)
-	trailingSpaceRE = regexp.MustCompile(`[ ]+\n`)
-	manSectionRE    = regexp.MustCompile(`\(\d\)`)
-	systemdName     string
+	reSpace      = regexp.MustCompile(`\s+`)
+	reManSection = regexp.MustCompile(`\(\d\)`)
 )
 
-func generate(url string) []configField {
-	var fields []configField
-	for _, section := range internal.FindDirectives(url).Sections {
-		for _, directive := range section.Directives {
-			desc := nodeToString(directive.Description.Get(0))
-			desc = leadingSpaceRE.ReplaceAllString(desc, "\n")
-			desc = trailingSpaceRE.ReplaceAllString(desc, "\n")
-			desc = strings.TrimSpace(newlineRE.ReplaceAllString(desc, "\n\n"))
-			desc = wordwrap(desc, 100)
-			fields = append(fields, configField{
-				Name:    directive.Name,
-				Comment: desc,
-			})
-		}
-	}
-	return fields
-}
+var systemdName string
 
 func nodeToString(node *html.Node) string {
 	switch node.Type {
 	case html.TextNode:
-		return manSectionRE.ReplaceAllString(spaceRE.ReplaceAllString(node.Data, " "), "")
+		return reManSection.ReplaceAllString(reSpace.ReplaceAllString(node.Data, " "), "")
 	case html.ElementNode:
 		if node.Data == "table" {
 			var data [][]string
-			nodeToTable(node, &data)
+			nodeToTable(&data, node)
 			buf := strings.Builder{}
 			table := tablewriter.NewWriter(&buf)
 			if len(data[0]) <= 2 {
@@ -116,26 +94,33 @@ func nodeToString(node *html.Node) string {
 			table.Render()
 			return indent(buf.String())
 		}
-		buf := strings.Builder{}
+		var buf strings.Builder
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
 			buf.WriteString(nodeToString(child))
 		}
 		switch node.Data {
 		case "dd":
 			return strings.TrimSpace(buf.String()) + "\n"
-		case "div", "span", "code", "strong", "a", "b", "em", "ul", "li", "th", "td":
+		case "div", "h3":
+			if attr(node, "class") == "warning" {
+				return indent(buf.String()) + "\n\n"
+			}
+			return buf.String() + "\n\n"
+		case "span", "code", "strong", "a", "b", "em", "ul", "li", "th", "td":
 			return buf.String()
 		case "dt":
 			return strings.TrimRight(buf.String(), "¶") + ": "
 		case "br":
 			return buf.String() + "\n"
 		case "p":
-			if v, ok := lookupAttr(node, "class"); !ok || v != "title" {
+			if attr(node, "class") != "title" {
 				return buf.String() + "\n\n"
 			}
 		case "pre", "dl":
 			return indent(buf.String()) + "\n\n"
 		default:
+			a := buf.String()
+			_ = a
 			log.Panicf("unknown tag %q", node.Data)
 		}
 	default:
@@ -144,7 +129,7 @@ func nodeToString(node *html.Node) string {
 	return ""
 }
 
-func nodeToTable(node *html.Node, data *[][]string) {
+func nodeToTable(data *[][]string, node *html.Node) {
 	switch node.Type {
 	case html.TextNode:
 	case html.ElementNode:
@@ -153,26 +138,26 @@ func nodeToTable(node *html.Node, data *[][]string) {
 		case "tr":
 			*data = append(*data, nil)
 		case "th", "td":
-			(*data)[len(*data)-1] = append((*data)[len(*data)-1], nodeToString(node))
+			(*data)[len(*data)-1] = append((*data)[len(*data)-1], strings.TrimSpace(nodeToString(node)))
 			return
 		default:
 			log.Panicf("unknown table tag %q", node.Data)
 		}
 		for child := node.FirstChild; child != nil; child = child.NextSibling {
-			nodeToTable(child, data)
+			nodeToTable(data, child)
 		}
 	default:
 		log.Panicf("unknown table node type %q", node.Type)
 	}
 }
 
-func lookupAttr(node *html.Node, name string) (string, bool) {
+func attr(node *html.Node, name string) string {
 	for _, attr := range node.Attr {
 		if attr.Key == name {
-			return attr.Val, true
+			return attr.Val
 		}
 	}
-	return "", false
+	return ""
 }
 
 func indent(s string) string {

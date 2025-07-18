@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -12,12 +11,11 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/pkg/errors"
-	"github.com/sergeymakinen/go-systemdconf/v2/cmd/internal"
+	"github.com/sergeymakinen/go-systemdconf/v3/cmd/internal/common"
 )
 
 func printUsage(w *os.File) {
-	fmt.Fprintf(w, "usage: discoversdconf [-bare] [url|config.yml]\n")
+	fmt.Fprintf(w, "usage: discoversdconf [-bare] [-refsect refsect] [-header header] [url|config.yml]\n")
 	fmt.Fprintf(w, "fetches systemd directive pages and aggregates their content\n")
 }
 
@@ -31,6 +29,8 @@ func main() {
 	log.SetPrefix("discoversdconf: ")
 	flag.Usage = usage
 	bare := flag.Bool("bare", false, "")
+	refsect := flag.String("refsect", "", "")
+	header := flag.String("header", "", "")
 	flag.Parse()
 	switch flag.NArg() {
 	case 0:
@@ -38,7 +38,7 @@ func main() {
 	case 1:
 		pathOrURL := flag.Arg(0)
 		if strings.HasPrefix(pathOrURL, "http://") || strings.HasPrefix(pathOrURL, "https://") {
-			config(pathOrURL, *bare)
+			config(pathOrURL, *refsect, *header, *bare)
 		} else {
 			overview(pathOrURL)
 		}
@@ -55,18 +55,18 @@ type directiveGroup struct {
 func overview(cfgpath string) {
 	var cfg []byte
 	if cfgpath != "" {
-		if !internal.Exist(cfgpath) {
+		if !common.Exist(cfgpath) {
 			log.Fatalf("config %q not found", cfgpath)
 		}
-		if b, err := ioutil.ReadFile(cfgpath); err == nil {
+		if b, err := os.ReadFile(cfgpath); err == nil {
 			cfg = b
 		} else {
-			log.Fatal(errors.Wrapf(err, "failed to read %q", cfgpath))
+			log.Fatalf("failed to read %q: %v", cfgpath, err)
 		}
 	}
-	baseURL := internal.ParseURL("https://www.freedesktop.org/software/systemd/man/systemd.directives.html")
+	baseURL := common.ParseURL("https://www.freedesktop.org/software/systemd/man/systemd.directives.html")
 	var dgs []directiveGroup
-	for _, section := range internal.FindDirectives(baseURL.String()).Sections {
+	for _, section := range common.FindDirectives(baseURL.String(), nil).Sections {
 		dg := directiveGroup{
 			Title:      section.Title,
 			URL:        section.URL,
@@ -92,9 +92,9 @@ func overview(cfgpath string) {
 			mark := ""
 			if cfg != nil {
 				if bytes.Contains(cfg, []byte(u)) {
-					mark = "✔ "
+					mark = "\033[32m✔\033[0m "
 				} else {
-					mark = "✗ "
+					mark = "\033[31m✗\033[0m "
 				}
 			}
 			if len(directives) > 5 {
@@ -106,10 +106,13 @@ func overview(cfgpath string) {
 	}
 }
 
-var sectionNameRE = regexp.MustCompile(`\[([A-Z][\w-]*)]`)
+var reSectionName = regexp.MustCompile(`\[([A-Z][\w-]*)]`)
 
-func config(url string, bare bool) {
-	page := internal.FindDirectives(url)
+func config(url, refsect, header string, bare bool) {
+	page := common.FindDirectives(url, &common.FindDirectivesOptions{
+		Refsect: refsect,
+		Header:  header,
+	})
 	comment := fmt.Sprintf("TODO: %s", url)
 	if page.Description != "" {
 		comment = page.Description
@@ -131,8 +134,8 @@ func config(url string, bare bool) {
 		code += fmt.Sprintf("  comment: %s\n  structs:\n", comment)
 		for _, section := range page.Sections {
 			sectionName := "(TODO)"
-			if sectionNameRE.MatchString(section.Title) {
-				sectionName = sectionNameRE.FindStringSubmatch(section.Title)[1]
+			if reSectionName.MatchString(section.Title) {
+				sectionName = reSectionName.FindStringSubmatch(section.Title)[1]
 			}
 			code += fmt.Sprintf("    .%s:\n      comment: TODO\n      fields: %s\n", sectionName, section.URL)
 		}

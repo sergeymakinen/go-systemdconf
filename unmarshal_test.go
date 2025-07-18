@@ -1,23 +1,34 @@
 package systemdconf
 
 import (
-	"io/ioutil"
+	"errors"
+	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 )
 
 type fileTest struct {
 	File
+
 	Section1 *struct {
 		*Section
+
 		Key1, Key2 Value
 		Key3       **Value
 	}
 	Section3 struct {
+		Key Value
+	}
+	Section4 []struct {
+		Key1, Key2 Value
+	}
+	Section5 [3]struct {
+		Key Value
+	}
+	Section6 [2]struct {
 		Key Value
 	}
 	XSection1 struct {
@@ -30,6 +41,7 @@ type fileTest struct {
 	} `systemd:"-"`
 	ActualXSection2 struct {
 		Section
+
 		Key  Value
 		XKey Value `systemd:"X-Key"`
 	} `systemd:"X-Section2"`
@@ -54,11 +66,10 @@ type fileTest struct {
 }
 
 func TestUnmarshalFile(t *testing.T) {
-	b, err := ioutil.ReadFile("testdata/unmarshal.conf")
+	b, err := os.ReadFile("testdata/unmarshal.conf")
 	if err != nil {
-		panic("failed to read testdata/unmarshal.conf: " + err.Error())
+		t.Fatal(err)
 	}
-
 	ptrValue := &Value{"value 1", "value 2"}
 	boolTrue := true
 	ptrBoolTrue := &boolTrue
@@ -117,7 +128,7 @@ func TestUnmarshalFile(t *testing.T) {
 				entries: []*Entry{
 					{
 						Key:   "X-Key1",
-						Value: Value{"value 3"},
+						Value: Value{"value 3", "value 6"},
 					},
 					{
 						Key:   "X-Key2",
@@ -125,14 +136,37 @@ func TestUnmarshalFile(t *testing.T) {
 					},
 				},
 			},
-			Key1: Value{"value 1"},
+			Key1: Value{"value 1", "value 5"},
 			Key2: Value{"value 2"},
 			Key3: &ptrValue,
 		},
 		Section3: struct {
 			Key Value
+		}{Key: Value{"value 1"}},
+		Section4: []struct {
+			Key1, Key2 Value
 		}{
-			Key: Value{"value 1"},
+			{
+				Key1: Value{"value 1"},
+				Key2: Value{"value 2"},
+			},
+			{
+				Key1: Value{"value 3"},
+				Key2: Value{"value 4"},
+			},
+		},
+		Section5: [3]struct {
+			Key Value
+		}{
+			{Key: Value{"value 1"}},
+			{Key: Value{"value 2"}},
+			{},
+		},
+		Section6: [2]struct {
+			Key Value
+		}{
+			{Key: Value{"value 1"}},
+			{},
 		},
 		XSection1: struct {
 			Key  Value
@@ -310,86 +344,151 @@ func TestUnmarshalShouldFail(t *testing.T) {
 Key=value 1
 Key=value 2
 `)
-	run := func(t *testing.T, name, expected string, f func() error) {
-		t.Run(name, func(t *testing.T) {
-			err := f()
-			if err == nil || !strings.Contains(err.Error(), expected) {
-				t.Errorf("Unmarshal() = %v; does not contain %s", err, expected)
+	tests := []struct {
+		name     string
+		expected string
+		f        func() error
+	}{
+		{
+			name:     "invalid",
+			expected: "",
+			f: func() error {
+				return Unmarshal([]byte("foo"), &struct{}{})
+			},
+		},
+		{
+			name:     "not pointer",
+			expected: "expected non-nil pointer, got struct",
+			f: func() error {
+				return Unmarshal(file, struct{}{})
+			},
+		},
+		{
+			name:     "nil",
+			expected: "expected non-nil pointer, got nil",
+			f: func() error {
+				return Unmarshal(file, nil)
+			},
+		},
+		{
+			name:     "nil pointer",
+			expected: "expected non-nil pointer, got nil",
+			f: func() error {
+				var s *struct{}
+				return Unmarshal(file, s)
+			},
+		},
+		{
+			name:     "non-struct file",
+			expected: "expected non-nil pointer, got bool",
+			f: func() error {
+				return Unmarshal(file, true)
+			},
+		},
+		{
+			name:     "non-struct/slice/array section",
+			expected: "expected struct, slice, or array, got int",
+			f: func() error {
+				return Unmarshal(file, &struct {
+					Section int
+				}{})
+			},
+		},
+		{
+			name:     "non-struct array section",
+			expected: "expected struct, got int",
+			f: func() error {
+				return Unmarshal(file, &struct {
+					Section []int
+				}{})
+			},
+		},
+		{
+			name:     "duplicated entry names",
+			expected: "conflicts with field struct",
+			f: func() error {
+				return Unmarshal(file, &struct {
+					Section struct {
+						Key1 string `systemd:"Key"`
+						Key2 string `systemd:"Key"`
+					}
+				}{})
+			},
+		},
+		{
+			name:     "unsupported entry type",
+			expected: "unsupported type",
+			f: func() error {
+				return Unmarshal(file, &struct {
+					Section struct {
+						Key int
+					}
+				}{})
+			},
+		},
+		{
+			name:     "unsupported entry slice type",
+			expected: "unsupported type",
+			f: func() error {
+				return Unmarshal(file, &struct {
+					Section struct {
+						Key []int
+					}
+				}{})
+			},
+		},
+		{
+			name:     "invalid duration",
+			expected: "invalid systemd duration",
+			f: func() error {
+				return Unmarshal(file, &struct {
+					Section struct {
+						Key time.Duration
+					}
+				}{})
+			},
+		},
+		{
+			name:     "invalid duration slice",
+			expected: "invalid systemd duration",
+			f: func() error {
+				return Unmarshal(file, &struct {
+					Section struct {
+						Key []time.Duration
+					}
+				}{})
+			},
+		},
+		{
+			name:     "invalid bool",
+			expected: "invalid systemd boolean",
+			f: func() error {
+				return Unmarshal(file, &struct {
+					Section struct {
+						Key bool
+					}
+				}{})
+			},
+		},
+		{
+			name:     "invalid bool slice",
+			expected: "invalid systemd boolean",
+			f: func() error {
+				return Unmarshal(file, &struct {
+					Section struct {
+						Key []bool
+					}
+				}{})
+			},
+		},
+	}
+	for _, td := range tests {
+		t.Run(td.name, func(t *testing.T) {
+			if err := td.f(); err == nil || !strings.Contains(err.Error(), td.expected) {
+				t.Errorf("Unmarshal() = %v; does not contain %s", err, td.expected)
 			}
 		})
 	}
-	run(t, "invalid", "", func() error {
-		return Unmarshal([]byte("foo"), &struct{}{})
-	})
-	run(t, "not pointer", "expected non-nil pointer, got struct", func() error {
-		return Unmarshal(file, struct{}{})
-	})
-	run(t, "nil", "expected non-nil pointer, got nil", func() error {
-		return Unmarshal(file, nil)
-	})
-	run(t, "nil pointer", "expected non-nil pointer, got nil", func() error {
-		var s *struct{}
-		return Unmarshal(file, s)
-	})
-	run(t, "non-struct file", "expected non-nil pointer, got bool", func() error {
-		return Unmarshal(file, true)
-	})
-	run(t, "non-struct section", "expected struct, got int", func() error {
-		return Unmarshal(file, &struct {
-			Section int
-		}{})
-	})
-	//
-	run(t, "duplicated entry names", "conflicts with field struct", func() error {
-		return Unmarshal(file, &struct {
-			Section struct {
-				Key1 string `systemd:"Key"`
-				Key2 string `systemd:"Key"`
-			}
-		}{})
-	})
-	run(t, "unsupported entry type", "unsupported type", func() error {
-		return Unmarshal(file, &struct {
-			Section struct {
-				Key int
-			}
-		}{})
-	})
-	run(t, "unsupported entry slice type", "unsupported type", func() error {
-		return Unmarshal(file, &struct {
-			Section struct {
-				Key []int
-			}
-		}{})
-	})
-	run(t, "invalid duration", "invalid systemd duration", func() error {
-		return Unmarshal(file, &struct {
-			Section struct {
-				Key time.Duration
-			}
-		}{})
-	})
-	run(t, "invalid duration slice", "invalid systemd duration", func() error {
-		return Unmarshal(file, &struct {
-			Section struct {
-				Key []time.Duration
-			}
-		}{})
-	})
-	run(t, "invalid bool", "invalid systemd boolean", func() error {
-		return Unmarshal(file, &struct {
-			Section struct {
-				Key bool
-			}
-		}{})
-	})
-	run(t, "invalid bool slice", "invalid systemd boolean", func() error {
-		return Unmarshal(file, &struct {
-			Section struct {
-				Key []bool
-			}
-		}{})
-	})
 }
 
 type marshalType string

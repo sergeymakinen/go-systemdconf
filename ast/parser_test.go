@@ -2,7 +2,8 @@ package ast
 
 import (
 	"bytes"
-	"io/ioutil"
+	"errors"
+	"os"
 	"strings"
 	"testing"
 
@@ -10,13 +11,13 @@ import (
 )
 
 func TestParseComplexFile(t *testing.T) {
-	b, err := ioutil.ReadFile("testdata/complex.conf")
+	b, err := os.ReadFile("testdata/complex.conf")
 	if err != nil {
-		panic("failed to read testdata/complex.conf: " + err.Error())
+		t.Fatal(err)
 	}
-	file, err := NewParser(bytes.NewReader(b)).Parse()
+	file, err := Parse(bytes.NewReader(b))
 	if err != nil {
-		t.Fatalf("Parser.Parse() = _, %v; want nil", err)
+		t.Fatalf("Parse() = _, %v; want nil", err)
 	}
 	expectedFile := &File{
 		Children: Children{
@@ -26,28 +27,28 @@ func TestParseComplexFile(t *testing.T) {
 					&Entry{
 						Key:   "KeyOne",
 						Value: "value 1",
-						begin: Position{15, 3, 1},
+						pos:   Position{15, 3, 1},
 						end:   Position{36, 3, 22},
 					},
 					&Entry{
 						Key:   "KeyTwo",
 						Value: "value 2",
-						begin: Position{38, 4, 1},
+						pos:   Position{38, 4, 1},
 						end:   Position{51, 4, 14},
 					},
 					&Comment{
-						Text:  "# a comment",
-						begin: Position{54, 6, 1},
-						end:   Position{64, 6, 11},
+						Text: "# a comment",
+						pos:  Position{54, 6, 1},
+						end:  Position{64, 6, 11},
 					},
 					&Include{
-						Path:  "/usr/lib/systemd/system/httpd.service",
-						begin: Position{67, 8, 1},
-						end:   Position{112, 8, 46},
+						Path: "/usr/lib/systemd/system/httpd.service",
+						pos:  Position{67, 8, 1},
+						end:  Position{112, 8, 46},
 					},
 				},
-				begin: Position{3, 2, 3},
-				end:   Position{13, 2, 13},
+				pos: Position{3, 2, 3},
+				end: Position{13, 2, 13},
 			},
 			&Section{
 				Name: "Section B",
@@ -55,18 +56,18 @@ func TestParseComplexFile(t *testing.T) {
 					&Entry{
 						Key:   "Setting",
 						Value: `"something" "some thing" "…"`,
-						begin: Position{126, 10, 1},
+						pos:   Position{126, 10, 1},
 						end:   Position{163, 10, 36},
 					},
 					&Entry{
 						Key:   "KeyTwo",
 						Value: "value 2  value 2 continued",
-						begin: Position{165, 11, 1},
+						pos:   Position{165, 11, 1},
 						end:   Position{205, 12, 24},
 					},
 				},
-				begin: Position{114, 9, 1},
-				end:   Position{124, 9, 11},
+				pos: Position{114, 9, 1},
+				end: Position{124, 9, 11},
 			},
 			&Section{
 				Name: "Section C",
@@ -74,31 +75,31 @@ func TestParseComplexFile(t *testing.T) {
 					&Entry{
 						Key:   "KeyThree",
 						Value: "value 2 value 2 continued continued 3",
-						begin: Position{220, 15, 1},
+						pos:   Position{220, 15, 1},
 						end:   Position{336, 19, 18},
 					},
 					&Comment{
-						Text:  `# this line is ignored\`,
-						begin: Position{242, 16, 5},
-						end:   Position{264, 16, 27},
+						Text: `# this line is ignored\`,
+						pos:  Position{242, 16, 5},
+						end:  Position{264, 16, 27},
 					},
 					&Comment{
-						Text:  "; this line is ignored too",
-						begin: Position{266, 17, 1},
-						end:   Position{291, 17, 26},
+						Text: "; this line is ignored too",
+						pos:  Position{266, 17, 1},
+						end:  Position{291, 17, 26},
 					},
 					&Comment{
-						Text:  ";      test",
-						begin: Position{338, 20, 1},
-						end:   Position{348, 20, 11},
+						Text: ";      test",
+						pos:  Position{338, 20, 1},
+						end:  Position{348, 20, 11},
 					},
 				},
-				begin: Position{208, 14, 1},
-				end:   Position{218, 14, 11},
+				pos: Position{208, 14, 1},
+				end: Position{218, 14, 11},
 			},
 		},
-		begin: Position{0, 1, 1},
-		end:   Position{353, 24, 1},
+		pos: Position{0, 1, 1},
+		end: Position{353, 24, 1},
 	}
 	if diff := cmp.Diff(expectedFile, file, cmp.AllowUnexported(File{}, Section{}, Entry{}, Include{}, Comment{})); diff != "" {
 		t.Errorf("Parser.Parse() mismatch (-want +got):\n%s", diff)
@@ -108,14 +109,14 @@ func TestParseComplexFile(t *testing.T) {
 func TestParseEdgeCases(t *testing.T) {
 	maxLengthStr := strings.Repeat("x", maxLineLength)
 	tests := []struct {
-		Name, Contents string
-		File           *File
-		Err            error
+		name, contents string
+		file           *File
+		err            error
 	}{
 		{
-			Name:     "no trailing newline",
-			Contents: "[Section]\nKey=Value",
-			File: &File{
+			name:     "no trailing newline",
+			contents: "[Section]\nKey=Value",
+			file: &File{
 				Children: Children{
 					&Section{
 						Name: "Section",
@@ -123,22 +124,22 @@ func TestParseEdgeCases(t *testing.T) {
 							&Entry{
 								Key:   "Key",
 								Value: "Value",
-								begin: Position{10, 2, 1},
+								pos:   Position{10, 2, 1},
 								end:   Position{18, 2, 9},
 							},
 						},
-						begin: Position{0, 1, 1},
-						end:   Position{8, 1, 9},
+						pos: Position{0, 1, 1},
+						end: Position{8, 1, 9},
 					},
 				},
-				begin: Position{0, 1, 1},
-				end:   Position{19, 2, 10},
+				pos: Position{0, 1, 1},
+				end: Position{19, 2, 10},
 			},
 		},
 		{
-			Name:     "trailing backslash",
-			Contents: "[Section]\nKey=Value 1\\\n2\\\n3\\\n",
-			File: &File{
+			name:     "trailing backslash",
+			contents: "[Section]\nKey=Value 1\\\n2\\\n3\\\n",
+			file: &File{
 				Children: Children{
 					&Section{
 						Name: "Section",
@@ -146,61 +147,62 @@ func TestParseEdgeCases(t *testing.T) {
 							&Entry{
 								Key:   "Key",
 								Value: "Value 1 2 3",
-								begin: Position{10, 2, 1},
+								pos:   Position{10, 2, 1},
 								end:   Position{26, 4, 1},
 							},
 						},
-						begin: Position{0, 1, 1},
-						end:   Position{8, 1, 9},
+						pos: Position{0, 1, 1},
+						end: Position{8, 1, 9},
 					},
 				},
-				begin: Position{0, 1, 1},
-				end:   Position{29, 5, 1},
+				pos: Position{0, 1, 1},
+				end: Position{29, 5, 1},
 			},
 		},
 		{
-			Name:     "too long section",
-			Contents: "[Section " + maxLengthStr + "]\nKey=Value\n",
-			Err:      ErrLineTooLong,
+			name:     "too long section",
+			contents: "[Section " + maxLengthStr + "]\nKey=Value\n",
+			err:      ErrLineTooLong,
 		},
 		{
-			Name:     "too long value",
-			Contents: "[Section]\nKey=Value + " + maxLengthStr + "\n",
-			Err:      ErrLineTooLong,
+			name:     "too long value",
+			contents: "[Section]\nKey=Value + " + maxLengthStr + "\n",
+			err:      ErrLineTooLong,
 		},
 		{
-			Name:     "too long continuation",
-			Contents: "[Section]\nKey=Value + " + maxLengthStr[:maxLineLength-100] + "\\\n" + maxLengthStr[:100] + "\n",
-			Err:      ErrContinuationLineTooLong,
+			name:     "too long continuation",
+			contents: "[Section]\nKey=Value + " + maxLengthStr[:maxLineLength-100] + "\\\n" + maxLengthStr[:100] + "\n",
+			err:      ErrContinuationLineTooLong,
 		},
 		{
-			Name:     "missing section",
-			Contents: "Key=Value\n",
-			Err:      ErrMissingSection,
+			name:     "missing section",
+			contents: "Key=Value\n",
+			err:      ErrMissingSection,
 		},
 		{
-			Name:     "missing =",
-			Contents: "[Section]\nKey\n",
-			Err:      ErrMissingEqual,
+			name:     "missing =",
+			contents: "[Section]\nKey\n",
+			err:      ErrMissingEqual,
 		},
 		{
-			Name:     "missing key name",
-			Contents: "[Section]\n=Value\n",
-			Err:      ErrMissingKey,
+			name:     "missing key name",
+			contents: "[Section]\n=Value\n",
+			err:      ErrMissingKey,
 		},
 	}
 	for _, td := range tests {
-		t.Run(td.Name, func(t *testing.T) {
-			file, err := NewParser(strings.NewReader(td.Contents)).Parse()
-			if err2, ok := err.(*ParseError); ok {
+		t.Run(td.name, func(t *testing.T) {
+			file, err := Parse(strings.NewReader(td.contents))
+			var err2 *ParseError
+			if errors.As(err, &err2) {
 				err = err2.Err
 			}
-			if err != td.Err {
-				t.Fatalf("Parser.Parse() = _, %v; want %v", err, td.Err)
+			if err != td.err {
+				t.Fatalf("Parse() = _, %v; want %v", err, td.err)
 			}
-			if td.File != nil {
-				if diff := cmp.Diff(td.File, file, cmp.AllowUnexported(File{}, Section{}, Entry{}, Include{}, Comment{})); diff != "" {
-					t.Errorf("Parser.Parse() mismatch (-want +got):\n%s", diff)
+			if td.file != nil {
+				if diff := cmp.Diff(td.file, file, cmp.AllowUnexported(File{}, Section{}, Entry{}, Include{}, Comment{})); diff != "" {
+					t.Errorf("Parse() mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
