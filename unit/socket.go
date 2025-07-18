@@ -1,21 +1,21 @@
-// DO NOT EDIT. This file is generated from systemd 247 by generatesdconf
+// Code generated from systemd 257 by generatesdconf. DO NOT EDIT.
 
 package unit
 
-import "github.com/sergeymakinen/go-systemdconf/v2"
+import "github.com/sergeymakinen/go-systemdconf/v3"
 
 // SocketFile represents systemd.socket — Socket unit configuration
-// (see https://www.freedesktop.org/software/systemd/man/systemd.socket.html for details)
+// (see https://www.freedesktop.org/software/systemd/man/systemd.socket.html for details).
 type SocketFile struct {
 	systemdconf.File
 
-	Unit    UnitSection    // Generic information about the unit that is not dependent on the type of unit
-	Socket  SocketSection  // Information about the socket or FIFO it supervises
-	Install InstallSection // Installation information for the unit
+	Unit    UnitSection    // generic information about the unit that is not dependent on the type of unit
+	Socket  SocketSection  // information about the socket or FIFO it supervises
+	Install InstallSection // installation information for the unit
 }
 
 // SocketSection represents information about the socket or FIFO it supervises
-// (see https://www.freedesktop.org/software/systemd/man/systemd.socket.html#Options for details)
+// (see https://www.freedesktop.org/software/systemd/man/systemd.socket.html#Options for details).
 type SocketSection struct {
 	systemdconf.Section
 	ExecOptions
@@ -42,7 +42,8 @@ type SocketSection struct {
 	//
 	// If the address string is a string in the format "vsock:x:y", it is read as CID x on a port y address in the AF_VSOCK family. The
 	// CID is a unique 32-bit integer identifier in AF_VSOCK analogous to an IP address. Specifying the CID is optional, and may
-	// be set to the empty string.
+	// be set to the empty string. "vsock" may be replaced with "vsock-stream", "vsock-dgram" or "vsock-seqpacket" to force
+	// usage of the corresponding socket type.
 	//
 	// Note that SOCK_SEQPACKET (i.e. ListenSequentialPacket=) is only available for AF_UNIX sockets. SOCK_STREAM (i.e.
 	// ListenStream=) when used for IP sockets refers to TCP sockets, SOCK_DGRAM (i.e. ListenDatagram=) to UDP.
@@ -81,7 +82,8 @@ type SocketSection struct {
 	//
 	// If the address string is a string in the format "vsock:x:y", it is read as CID x on a port y address in the AF_VSOCK family. The
 	// CID is a unique 32-bit integer identifier in AF_VSOCK analogous to an IP address. Specifying the CID is optional, and may
-	// be set to the empty string.
+	// be set to the empty string. "vsock" may be replaced with "vsock-stream", "vsock-dgram" or "vsock-seqpacket" to force
+	// usage of the corresponding socket type.
 	//
 	// Note that SOCK_SEQPACKET (i.e. ListenSequentialPacket=) is only available for AF_UNIX sockets. SOCK_STREAM (i.e.
 	// ListenStream=) when used for IP sockets refers to TCP sockets, SOCK_DGRAM (i.e. ListenDatagram=) to UDP.
@@ -120,7 +122,8 @@ type SocketSection struct {
 	//
 	// If the address string is a string in the format "vsock:x:y", it is read as CID x on a port y address in the AF_VSOCK family. The
 	// CID is a unique 32-bit integer identifier in AF_VSOCK analogous to an IP address. Specifying the CID is optional, and may
-	// be set to the empty string.
+	// be set to the empty string. "vsock" may be replaced with "vsock-stream", "vsock-dgram" or "vsock-seqpacket" to force
+	// usage of the corresponding socket type.
 	//
 	// Note that SOCK_SEQPACKET (i.e. ListenSequentialPacket=) is only available for AF_UNIX sockets. SOCK_STREAM (i.e.
 	// ListenStream=) when used for IP sockets refers to TCP sockets, SOCK_DGRAM (i.e. ListenDatagram=) to UDP.
@@ -162,9 +165,14 @@ type SocketSection struct {
 	// an absolute file system path of a FunctionFS mount point as the argument. Behavior otherwise is very similar to the ListenFIFO=
 	// directive above. Use this to open the FunctionFS endpoint ep0. When using this option, the activated service has to have
 	// the USBFunctionDescriptors= and USBFunctionStrings= options set.
+	//
+	// Added in version 227.
 	ListenUSBFunction systemdconf.Value
 
-	// Takes one of udplite or sctp. The socket will use the UDP-Lite (IPPROTO_UDPLITE) or SCTP (IPPROTO_SCTP) protocol, respectively.
+	// Takes one of udplite, sctp or mptcp. The socket will use the UDP-Lite (IPPROTO_UDPLITE), SCTP (IPPROTO_SCTP) or MPTCP
+	// (IPPROTO_MPTCP) protocol, respectively.
+	//
+	// Added in version 229.
 	SocketProtocol systemdconf.Value
 
 	// Takes one of default, both or ipv6-only. Controls the IPV6_V6ONLY socket option (see ipv6 for details). If both, IPv6 sockets
@@ -173,8 +181,10 @@ type SocketSection struct {
 	// which in turn defaults to the equivalent of both.
 	BindIPv6Only systemdconf.Value
 
-	// Takes an unsigned integer argument. Specifies the number of connections to queue that have not been accepted yet. This
-	// setting matters only for stream and sequential packet sockets. See listen for details. Defaults to SOMAXCONN (128).
+	// Takes an unsigned 32-bit integer argument. Specifies the number of connections to queue that have not been accepted yet.
+	// This setting matters only for stream and sequential packet sockets. See listen for details. Defaults to 4294967295. Note
+	// that this value is silently capped by the "net.core.somaxconn" sysctl, which typically defaults to 4096, so typically
+	// the sysctl is the setting that actually matters.
 	Backlog systemdconf.Value
 
 	// Specifies a network interface name to bind this socket to. If set, traffic will only be accepted from the specified network
@@ -183,20 +193,24 @@ type SocketSection struct {
 	// this parameter might result in additional dependencies to be added to the unit (see above).
 	BindToDevice systemdconf.Value
 
-	// Takes a UNIX user/group name. When specified, all AF_UNIX sockets and FIFO nodes in the file system are owned by the specified
+	// Takes a UNIX user/group name. When specified, all AF_UNIX sockets, FIFO nodes, and message queues are owned by the specified
 	// user and group. If unset (the default), the nodes are owned by the root user/group (if run in system context) or the invoking
 	// user/group (if run in user context). If only a user is specified but no group, then the group is derived from the user's default
 	// group.
+	//
+	// Added in version 214.
 	SocketUser systemdconf.Value
 
-	// Takes a UNIX user/group name. When specified, all AF_UNIX sockets and FIFO nodes in the file system are owned by the specified
+	// Takes a UNIX user/group name. When specified, all AF_UNIX sockets, FIFO nodes, and message queues are owned by the specified
 	// user and group. If unset (the default), the nodes are owned by the root user/group (if run in system context) or the invoking
 	// user/group (if run in user context). If only a user is specified but no group, then the group is derived from the user's default
 	// group.
+	//
+	// Added in version 214.
 	SocketGroup systemdconf.Value
 
-	// If listening on a file system socket or FIFO, this option specifies the file system access mode used when creating the file
-	// node. Takes an access mode in octal notation. Defaults to 0666.
+	// If listening on a file system socket, FIFO, or message queue, this option specifies the file system access mode used when
+	// creating the file node. Takes an access mode in octal notation. Defaults to 0666.
 	SocketMode systemdconf.Value
 
 	// If listening on a file system socket or FIFO, the parent directories are automatically created if needed. This option specifies
@@ -212,18 +226,33 @@ type SocketSection struct {
 	// invoke shutdown on sockets it got with Accept=no, but it may do so for sockets it got with Accept=yes set. Setting Accept=yes
 	// is mostly useful to allow daemons designed for usage with inetd to work unmodified with systemd socket activation.
 	//
-	// For IPv4 and IPv6 connections, the REMOTE_ADDR environment variable will contain the remote IP address, and REMOTE_PORT
-	// will contain the remote port. This is the same as the format used by CGI. For SOCK_RAW, the port is the IP protocol.
+	// Note that depending on this setting the services activated by units of this type are either regular services (in case of
+	// Accept=no) or instances of templated services (in case of Accept=yes). See the Description section above for a more detailed
+	// discussion of the naming rules of triggered services.
+	//
+	// For IPv4 and IPv6 connections, the $REMOTE_ADDR environment variable will contain the remote IP address, and $REMOTE_PORT
+	// will contain the remote port. This is the same as the format used by CGI.
+	//
+	// For AF_UNIX socket connections, the $REMOTE_ADDR environment variable will contain either the remote socket's file
+	// system path starting with a slash ("/") or its address in the abstract namespace starting with an at symbol ("@"). If the
+	// socket is unnamed, $REMOTE_ADDR will not be set.
+	//
+	// It is recommended to set CollectMode=inactive-or-failed for service instances activated via Accept=yes, to ensure
+	// that failed connection services are cleaned up and released from memory, and do not accumulate.
 	Accept systemdconf.Value
 
 	// Takes a boolean argument. May only be used in conjunction with ListenSpecial=. If true, the specified special file is opened
 	// in read-write mode, if false, in read-only mode. Defaults to false.
+	//
+	// Added in version 227.
 	Writable systemdconf.Value
 
 	// Takes a boolean argument. May only be used when Accept=no. If yes, the socket's buffers are cleared after the triggered
 	// service exited. This causes any pending data to be flushed and any pending incoming connections to be rejected. If no, the
-	// socket's buffers won't be cleared, permitting the service to handle any pending connections after restart, which is the
-	// usually expected behaviour. Defaults to no.
+	// socket's buffers will not be cleared, permitting the service to handle any pending connections after restart, which is
+	// the usually expected behaviour. Defaults to no.
+	//
+	// Added in version 247.
 	FlushPending systemdconf.Value
 
 	// The maximum number of connections to simultaneously run services instances for, when Accept=yes is set. If more concurrent
@@ -231,8 +260,10 @@ type SocketSection struct {
 	// no effect on sockets configured with Accept=no or datagram sockets. Defaults to 64.
 	MaxConnections systemdconf.Value
 
-	// The maximum number of connections for a service per source IP address. This is very similar to the MaxConnections= directive
-	// above. Disabled by default.
+	// The maximum number of connections for a service per source IP address (in case of IPv4/IPv6), per source CID (in case of AF_VSOCK),
+	// or source UID (in case of AF_UNIX). This is very similar to the MaxConnections= directive above. Defaults to 0, i.e. disabled.
+	//
+	// Added in version 232.
 	MaxConnectionsPerSource systemdconf.Value
 
 	// Takes a boolean argument. If true, the TCP/IP stack will send a keep alive message after 2h (depending on the configuration
@@ -241,22 +272,30 @@ type SocketSection struct {
 	KeepAlive systemdconf.Value
 
 	// Takes time (in seconds) as argument. The connection needs to remain idle before TCP starts sending keepalive probes. This
-	// controls the TCP_KEEPIDLE socket option (see socket and the TCP Keepalive HOWTO for details.) Defaults value is 7200 seconds
+	// controls the TCP_KEEPIDLE socket option (see socket and the TCP Keepalive HOWTO for details.) Default value is 7200 seconds
 	// (2 hours).
+	//
+	// Added in version 216.
 	KeepAliveTimeSec systemdconf.Value
 
 	// Takes time (in seconds) as argument between individual keepalive probes, if the socket option SO_KEEPALIVE has been set
-	// on this socket. This controls the TCP_KEEPINTVL socket option (see socket and the TCP Keepalive HOWTO for details.) Defaults
+	// on this socket. This controls the TCP_KEEPINTVL socket option (see socket and the TCP Keepalive HOWTO for details.) Default
 	// value is 75 seconds.
+	//
+	// Added in version 216.
 	KeepAliveIntervalSec systemdconf.Value
 
 	// Takes an integer as argument. It is the number of unacknowledged probes to send before considering the connection dead
 	// and notifying the application layer. This controls the TCP_KEEPCNT socket option (see socket and the TCP Keepalive HOWTO
-	// for details.) Defaults value is 9.
+	// for details.) Default value is 9.
+	//
+	// Added in version 216.
 	KeepAliveProbes systemdconf.Value
 
 	// Takes a boolean argument. TCP Nagle's algorithm works by combining a number of small outgoing messages, and sending them
 	// all at once. This controls the TCP_NODELAY socket option (see tcp). Defaults to false.
+	//
+	// Added in version 216.
 	NoDelay systemdconf.Value
 
 	// Takes an integer argument controlling the priority for all traffic sent from this socket. This controls the SO_PRIORITY
@@ -274,6 +313,8 @@ type SocketSection struct {
 	// kernel will send data in the final packet establishing the connection (the third packet in the "three-way handshake").
 	//
 	// Disabled by default.
+	//
+	// Added in version 216.
 	DeferAcceptSec systemdconf.Value
 
 	// Takes an integer argument controlling the receive or send buffer sizes of this socket, respectively. This controls the
@@ -301,29 +342,40 @@ type SocketSection struct {
 
 	// Takes a boolean value. If true, allows multiple binds to this TCP or UDP port. This controls the SO_REUSEPORT socket option.
 	// See socket for details.
+	//
+	// Added in version 206.
 	ReusePort systemdconf.Value
 
 	// Takes a string value. Controls the extended attributes "security.SMACK64", "security.SMACK64IPIN" and "security.SMACK64IPOUT",
 	// respectively, i.e. the security label of the FIFO, or the security label for the incoming or outgoing connections of the
-	// socket, respectively. See Smack.txt for details.
+	// socket, respectively. See Smack for details.
+	//
+	// Added in version 196.
 	SmackLabel systemdconf.Value
 
 	// Takes a string value. Controls the extended attributes "security.SMACK64", "security.SMACK64IPIN" and "security.SMACK64IPOUT",
 	// respectively, i.e. the security label of the FIFO, or the security label for the incoming or outgoing connections of the
-	// socket, respectively. See Smack.txt for details.
+	// socket, respectively. See Smack for details.
+	//
+	// Added in version 196.
 	SmackLabelIPIn systemdconf.Value
 
 	// Takes a string value. Controls the extended attributes "security.SMACK64", "security.SMACK64IPIN" and "security.SMACK64IPOUT",
 	// respectively, i.e. the security label of the FIFO, or the security label for the incoming or outgoing connections of the
-	// socket, respectively. See Smack.txt for details.
+	// socket, respectively. See Smack for details.
+	//
+	// Added in version 196.
 	SmackLabelIPOut systemdconf.Value
 
 	// Takes a boolean argument. When true, systemd will attempt to figure out the SELinux label used for the instantiated service
 	// from the information handed by the peer over the network. Note that only the security level is used from the information
 	// provided by the peer. Other parts of the resulting SELinux context originate from either the target binary that is effectively
-	// triggered by socket unit or from the value of the SELinuxContext= option. This configuration option only affects sockets
-	// with Accept= mode set to "yes". Also note that this option is useful only when MLS/MCS SELinux policy is deployed. Defaults
-	// to "false".
+	// triggered by socket unit or from the value of the SELinuxContext= option. This configuration option applies only when
+	// activated service is passed in single socket file descriptor, i.e. service instances that have standard input connected
+	// to a socket or services triggered by exactly one socket unit. Also note that this option is useful only when MLS/MCS SELinux
+	// policy is deployed. Defaults to "false".
+	//
+	// Added in version 217.
 	SELinuxContextFromNet systemdconf.Value
 
 	// Takes a size in bytes. Controls the pipe buffer size of FIFOs configured in this socket unit. See fcntl for details. The usual
@@ -362,13 +414,17 @@ type SocketSection struct {
 	// Takes a boolean value. This controls the IP_PKTINFO, IPV6_RECVPKTINFO, NETLINK_PKTINFO or PACKET_AUXDATA socket options,
 	// which enable reception of additional per-packet metadata as ancillary message, on AF_INET, AF_INET6, AF_UNIX and AF_PACKET
 	// sockets. Defaults to false.
+	//
+	// Added in version 246.
 	PassPacketInfo systemdconf.Value
 
-	// Takes one of "off", "us" (alias: "usec", "µs") or "ns" (alias: "nsec"). This controls the SO_TIMESTAMP or SO_TIMESTAMPNS
+	// Takes one of "off", "us" (alias: "usec", "μs") or "ns" (alias: "nsec"). This controls the SO_TIMESTAMP or SO_TIMESTAMPNS
 	// socket options, and enables whether ingress network traffic shall carry timestamping metadata. Defaults to off.
+	//
+	// Added in version 247.
 	Timestamping systemdconf.Value
 
-	// Takes a string value. Controls the TCP congestion algorithm used by this socket. Should be one of "westwood", "veno", "cubic",
+	// Takes a string value. Controls the TCP congestion algorithm used by this socket. Should be one of "westwood", "reno", "cubic",
 	// "lp" or any other available algorithm supported by the IP stack. This setting applies only to stream sockets.
 	TCPCongestion systemdconf.Value
 
@@ -408,6 +464,8 @@ type SocketSection struct {
 	// Normally, it should not be necessary to use this option, and is not recommended as services might continue to run after the
 	// socket unit has been terminated and it should still be possible to communicate with them via their file system node. Defaults
 	// to off.
+	//
+	// Added in version 214.
 	RemoveOnStop systemdconf.Value
 
 	// Takes a list of file system paths. The specified paths will be created as symlinks to the AF_UNIX socket path or FIFO path
@@ -415,30 +473,98 @@ type SocketSection struct {
 	// socket unit. Use this option to manage one or more symlinked alias names for a socket, binding their lifecycle together.
 	// Note that if creation of a symlink fails this is not considered fatal for the socket unit, and the socket unit may still start.
 	// If an empty string is assigned, the list of paths is reset. Defaults to an empty list.
+	//
+	// Added in version 214.
 	Symlinks systemdconf.Value
 
 	// Assigns a name to all file descriptors this socket unit encapsulates. This is useful to help activated services identify
 	// specific file descriptors, if multiple fds are passed. Services may use the sd_listen_fds_with_names call to acquire
 	// the names configured for the received file descriptors. Names may contain any ASCII character, but must exclude control
 	// characters and ":", and must be at most 255 characters in length. If this setting is not used, the file descriptor name defaults
-	// to the name of the socket unit, including its .socket suffix.
+	// to the name of the socket unit (including its .socket suffix) when Accept=no, "connection" otherwise.
+	//
+	// Added in version 227.
 	FileDescriptorName systemdconf.Value
 
-	// Configures a limit on how often this socket unit my be activated within a specific time interval. The TriggerLimitIntervalSec=
-	// may be used to configure the length of the time interval in the usual time units "us", "ms", "s", "min", "h", … and defaults
-	// to 2s (See systemd.time for details on the various time units understood). The TriggerLimitBurst= setting takes a positive
-	// integer value and specifies the number of permitted activations per time interval, and defaults to 200 for Accept=yes
+	// Configures a limit on how often this socket unit may be activated within a specific time interval. The TriggerLimitIntervalSec=
+	// setting may be used to configure the length of the time interval in the usual time units "us", "ms", "s", "min", "h", … and
+	// defaults to 2s (See systemd.time for details on the various time units understood). The TriggerLimitBurst= setting takes
+	// a positive integer value and specifies the number of permitted activations per time interval, and defaults to 200 for Accept=yes
 	// sockets (thus by default permitting 200 activations per 2s), and 20 otherwise (20 activations per 2s). Set either to 0 to
-	// disable any form of trigger rate limiting. If the limit is hit, the socket unit is placed into a failure mode, and will not
-	// be connectible anymore until restarted. Note that this limit is enforced before the service activation is enqueued.
+	// disable any form of trigger rate limiting.
+	//
+	// If the limit is hit, the socket unit is placed into a failure mode, and will not be connectible anymore until restarted. Note
+	// that this limit is enforced before the service activation is enqueued.
+	//
+	// Compare with PollLimitIntervalSec=/PollLimitBurst= described below, which implements a temporary slowdown if a socket
+	// unit is flooded with incoming traffic, as opposed to the permanent failure state TriggerLimitIntervalSec=/TriggerLimitBurst=
+	// results in.
+	//
+	// Added in version 230.
 	TriggerLimitIntervalSec systemdconf.Value
 
-	// Configures a limit on how often this socket unit my be activated within a specific time interval. The TriggerLimitIntervalSec=
-	// may be used to configure the length of the time interval in the usual time units "us", "ms", "s", "min", "h", … and defaults
-	// to 2s (See systemd.time for details on the various time units understood). The TriggerLimitBurst= setting takes a positive
-	// integer value and specifies the number of permitted activations per time interval, and defaults to 200 for Accept=yes
+	// Configures a limit on how often this socket unit may be activated within a specific time interval. The TriggerLimitIntervalSec=
+	// setting may be used to configure the length of the time interval in the usual time units "us", "ms", "s", "min", "h", … and
+	// defaults to 2s (See systemd.time for details on the various time units understood). The TriggerLimitBurst= setting takes
+	// a positive integer value and specifies the number of permitted activations per time interval, and defaults to 200 for Accept=yes
 	// sockets (thus by default permitting 200 activations per 2s), and 20 otherwise (20 activations per 2s). Set either to 0 to
-	// disable any form of trigger rate limiting. If the limit is hit, the socket unit is placed into a failure mode, and will not
-	// be connectible anymore until restarted. Note that this limit is enforced before the service activation is enqueued.
+	// disable any form of trigger rate limiting.
+	//
+	// If the limit is hit, the socket unit is placed into a failure mode, and will not be connectible anymore until restarted. Note
+	// that this limit is enforced before the service activation is enqueued.
+	//
+	// Compare with PollLimitIntervalSec=/PollLimitBurst= described below, which implements a temporary slowdown if a socket
+	// unit is flooded with incoming traffic, as opposed to the permanent failure state TriggerLimitIntervalSec=/TriggerLimitBurst=
+	// results in.
+	//
+	// Added in version 230.
 	TriggerLimitBurst systemdconf.Value
+
+	// Configures a limit on how often polling events on the file descriptors backing this socket unit will be considered. This
+	// pair of settings is similar to TriggerLimitIntervalSec=/TriggerLimitBurst= but instead of putting a (fatal) limit
+	// on the activation frequency puts a (transient) limit on the polling frequency. The expected parameter syntax and range
+	// are identical to that of the aforementioned options, and can be disabled the same way.
+	//
+	// If the polling limit is hit polling is temporarily disabled on it until the specified time window passes. The polling limit
+	// hence slows down connection attempts if hit, but unlike the trigger limit will not cause permanent failures. It's the recommended
+	// mechanism to deal with DoS attempts through packet flooding.
+	//
+	// The polling limit is enforced per file descriptor to listen on, as opposed to the trigger limit which is enforced for the
+	// entire socket unit. This distinction matters for socket units that listen on multiple file descriptors (i.e. have multiple
+	// ListenXYZ= stanzas).
+	//
+	// These setting defaults to 150 (in case of Accept=yes) and 15 (otherwise) polling events per 2s. This is considerably lower
+	// than the default values for the trigger limit (see above) and means that the polling limit should typically ensure the trigger
+	// limit is never hit, unless one of them is reconfigured or disabled.
+	//
+	// Added in version 255.
+	PollLimitIntervalSec systemdconf.Value
+
+	// Configures a limit on how often polling events on the file descriptors backing this socket unit will be considered. This
+	// pair of settings is similar to TriggerLimitIntervalSec=/TriggerLimitBurst= but instead of putting a (fatal) limit
+	// on the activation frequency puts a (transient) limit on the polling frequency. The expected parameter syntax and range
+	// are identical to that of the aforementioned options, and can be disabled the same way.
+	//
+	// If the polling limit is hit polling is temporarily disabled on it until the specified time window passes. The polling limit
+	// hence slows down connection attempts if hit, but unlike the trigger limit will not cause permanent failures. It's the recommended
+	// mechanism to deal with DoS attempts through packet flooding.
+	//
+	// The polling limit is enforced per file descriptor to listen on, as opposed to the trigger limit which is enforced for the
+	// entire socket unit. This distinction matters for socket units that listen on multiple file descriptors (i.e. have multiple
+	// ListenXYZ= stanzas).
+	//
+	// These setting defaults to 150 (in case of Accept=yes) and 15 (otherwise) polling events per 2s. This is considerably lower
+	// than the default values for the trigger limit (see above) and means that the polling limit should typically ensure the trigger
+	// limit is never hit, unless one of them is reconfigured or disabled.
+	//
+	// Added in version 255.
+	PollLimitBurst systemdconf.Value
+
+	// Takes a boolean argument. Defaults to off. If enabled, file descriptors created by the socket unit are passed to ExecStartPost=,
+	// ExecStopPre=, and ExecStopPost= commands from the socket unit. The passed file descriptors can be accessed with sd_listen_fds
+	// as if the commands were invoked from the associated service units. Note that ExecStartPre= command cannot access socket
+	// file descriptors.
+	//
+	// Added in version 256.
+	PassFileDescriptorsToExec systemdconf.Value
 }
