@@ -1,7 +1,7 @@
 package systemdconf
 
 import (
-	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -9,13 +9,13 @@ import (
 )
 
 func TestMarshalFile(t *testing.T) {
-	unmarshal, err := ioutil.ReadFile("testdata/unmarshal.conf")
+	unmarshal, err := os.ReadFile("testdata/unmarshal.conf")
 	if err != nil {
-		panic("failed to read testdata/unmarshal.conf: " + err.Error())
+		t.Fatal(err)
 	}
-	marshal, err := ioutil.ReadFile("testdata/marshal.conf")
+	marshal, err := os.ReadFile("testdata/marshal.conf")
 	if err != nil {
-		panic("failed to read testdata/marshal.conf: " + err.Error())
+		t.Fatal(err)
 	}
 	var s fileTest
 	err = Unmarshal(unmarshal, &s)
@@ -33,23 +33,23 @@ func TestMarshalFile(t *testing.T) {
 
 func TestMarshalShouldFail(t *testing.T) {
 	tests := []struct {
-		Name, Expected string
-		V              interface{}
+		name, expected string
+		v              any
 	}{
 		{
-			Name:     "nil",
-			Expected: "expected value, got nil",
-			V:        nil,
+			name:     "nil",
+			expected: "expected value, got nil",
+			v:        nil,
 		},
 		{
-			Name:     "non-struct file",
-			Expected: "expected struct, got bool",
-			V:        true,
+			name:     "non-struct file",
+			expected: "expected struct, got bool",
+			v:        true,
 		},
 		{
-			Name:     "non-struct section",
-			Expected: "expected struct, got int",
-			V: struct {
+			name:     "non-struct/slice/array section",
+			expected: "expected struct, slice, or array, got int",
+			v: struct {
 				Section1 struct {
 					Entry *string
 				}
@@ -57,9 +57,16 @@ func TestMarshalShouldFail(t *testing.T) {
 			}{},
 		},
 		{
-			Name:     "duplicated entry names",
-			Expected: "conflicts with field struct",
-			V: struct {
+			name:     "non-struct array section",
+			expected: "expected struct, got int",
+			v: struct {
+				Section []int
+			}{Section: []int{1, 2}},
+		},
+		{
+			name:     "duplicated entry names",
+			expected: "conflicts with field struct",
+			v: struct {
 				Section1 struct {
 					Entry       string
 					Duplicated1 string `systemd:"Entry"`
@@ -74,9 +81,9 @@ func TestMarshalShouldFail(t *testing.T) {
 			},
 		},
 		{
-			Name:     "unsupported entry type",
-			Expected: "unsupported type",
-			V: struct {
+			name:     "unsupported entry type",
+			expected: "unsupported type",
+			v: struct {
 				Section1 struct {
 					Entry string
 				}
@@ -86,9 +93,9 @@ func TestMarshalShouldFail(t *testing.T) {
 			}{},
 		},
 		{
-			Name:     "unsupported entry slice type",
-			Expected: "unsupported type",
-			V: struct {
+			name:     "unsupported entry slice type",
+			expected: "unsupported type",
+			v: struct {
 				Section1 struct {
 					Entry string
 				}
@@ -105,10 +112,10 @@ func TestMarshalShouldFail(t *testing.T) {
 		},
 	}
 	for _, td := range tests {
-		t.Run(td.Name, func(t *testing.T) {
-			_, err := Marshal(td.V)
-			if err == nil || !strings.Contains(err.Error(), td.Expected) {
-				t.Errorf("Marshal() = _, %v; does not contain %s", err, td.Expected)
+		t.Run(td.name, func(t *testing.T) {
+			_, err := Marshal(td.v)
+			if err == nil || !strings.Contains(err.Error(), td.expected) {
+				t.Errorf("Marshal() = _, %v; does not contain %s", err, td.expected)
 			}
 		})
 	}
