@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/sergeymakinen/go-systemdconf/v3/cmd/internal/common"
+	"github.com/sergeymakinen/go-systemdconf/v3/tools/cmd/internal/common"
 )
 
 func printUsage(w *os.File) {

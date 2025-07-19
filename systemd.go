@@ -1,5 +1,3 @@
-//go:generate go run github.com/sergeymakinen/go-systemdconf/v3/cmd/internal/generatesdconf cmd/internal/generatesdconf/config.yml .
-
 // Package systemdconf implements encoding and decoding of systemd configuration files
 // as defined by systemd.syntax (see https://www.freedesktop.org/software/systemd/man/systemd.syntax.html for details).
 //

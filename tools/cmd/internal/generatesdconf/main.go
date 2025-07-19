@@ -12,7 +12,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/olekukonko/tablewriter"
-	"github.com/sergeymakinen/go-systemdconf/v3/cmd/internal/common"
+	"github.com/sergeymakinen/go-systemdconf/v3/tools/cmd/internal/common"
 	"golang.org/x/net/html"
 	"gopkg.in/yaml.v3"
 )
