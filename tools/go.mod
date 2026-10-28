@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/olekukonko/tablewriter v0.0.5
-	golang.org/x/net v0.60.0
+	golang.org/x/net v0.62.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
